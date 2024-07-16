@@ -1,41 +1,201 @@
-/* 侧边栏样式 */
+
 .sidebar {
-    height: 100%;
-    width: 0;
-    min-width: 0; /* 设置最小宽度为0，确保在收起时不占据空间 */
-    background: #f0f0f0;
-    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
-    transition: width 0s ease, visibility 0s ease 0s; /* 过渡宽度和visibility属性 */
-    transform: translateX(-100%);
-    position: relative;
-    z-index: 1; /* 确保侧边栏在上层 */
-    visibility: hidden; /* 初始时隐藏侧边栏内容 */
-  }
-  
-  .sidebar.open {
-    width: 40%; /* 当侧边栏展开时再设置宽度 */
-    min-width: 300px; /* 设置最小宽度，确保侧边栏不会过窄 */
-    transform: translateX(0);
-    visibility: visible; /* 展开时显示侧边栏内容 */
-    transition-delay: 0s; /* 延迟过渡时间，确保visibility属性立即生效 */
-  }
-  
-  /* 侧边栏切换按钮样式 */
-  .sidebar .toggle-btn {
-    position: absolute;
-    top: 50%;
-    right: -30px;
-    width: 30px;
-    height: 30px;
-    background: #1890ff;
-    color: white;
-    border: none;
-    border-radius: 0 4px 4px 0;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0;
-    visibility: visible;
-  }
-  
+  height: 100%;
+  width: 0;
+  min-width: 0; 
+  background: #ffffff;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+  transition: width 0s ease, visibility 0s ease 0s; 
+  transform: translateX(-100%);
+  position: relative;
+  z-index: 1; 
+  visibility: hidden; 
+}
+
+.sidebar.open {
+  width: 40%; /* 当侧边栏展开时再设置宽度 */
+  min-width: 300px; /* 设置最小宽度，确保侧边栏不会过窄 */
+  transform: translateX(0);
+  visibility: visible; /* 展开时显示侧边栏内容 */
+  transition-delay: 0s; /* 延迟过渡时间，确保visibility属性立即生效 */
+}
+
+
+.sidebar .toggle-btn {
+  position: absolute;
+  top: 50%;
+  right: -30px;
+  width: 30px;
+  height: 30px;
+  background: #1890ff;
+  color: white;
+  border: none;
+  border-radius: 0 4px 4px 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  visibility: visible;
+}
+
+.sidebar .content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.editor-header {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
+  margin-bottom: 5px; 
+  margin-right: 10px;
+}
+
+.editor-header .icon-btn {
+  margin-left: 4px;
+  margin-right: 4px;
+  width: 46px; 
+  height: 36px; 
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0; 
+  border: 1px solid #A2A2A2;
+}
+.editor-header .input{
+  margin-left: 10px;
+  margin-right: 4px;
+  height: 36px;
+  line-height: 36px;
+  border: none;
+  background-color: #EFEFEF;
+}
+
+.editor-header .input:focus-within {
+  background-color: #ffffff; 
+}
+.editor-header .ant-input {
+  margin-top: 2px;
+  margin-right: 0; 
+  flex-grow: 1; 
+  background-color: #EFEFEF; 
+  border: 0; 
+  height: 24px; 
+  line-height: 24px; 
+  box-sizing: border-box;
+  font-size: 14px; 
+  transition: background-color 0.3s; 
+}
+
+.editor-header .ant-input:focus {
+  background-color: #ffffff; 
+}
+.editor-header .edit-btn {
+  margin-right: 0; 
+  width: 26px; /* 设置宽度为正方形 */
+  height: 26px; /* 设置高度为正方形 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0; /* 去掉按钮内部的填充 */
+  border: none; /* 去掉按钮的边框 */
+  background: transparent; /* 背景透明 */
+  box-shadow: none; /* 去掉阴影 */
+}
+
+.editor-header .icon {
+  width: 16px;
+  height: 16px;
+}
+
+.editor {
+  display: flex;
+  flex-direction: column; 
+  flex-grow: 1;
+  padding: 5px;
+  height: calc(100% - 60px);
+}
+.quill{
+  display: flex;
+  flex-direction: column; 
+  height: calc(100%);
+}
+.ql-toolbar {
+  display: flex; /* 使用 flexbox 布局 */
+  flex-direction: row; /* 水平排列工具 */
+  flex-wrap: wrap; /* 超出时自动换行 */
+  padding: 5px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.ql-container {
+  flex-grow: 1; /* 让容器占据剩余空间 */
+  overflow-y: auto; /* 超出时出现滚动条 */
+}
+
+.ql-editor {
+  padding: 10px; /* 可选：为编辑器内容区添加内边距 */
+}
+
+.sidebar {
+  transition: transform 0.3s ease-in-out;
+}
+
+.sidebar.open {
+  transform: translateX(0);
+}
+
+.sidebar:not(.open) {
+  transform: translateX(-100%);
+}
+
+
+.ql-editor::selection {
+  background: yellow; 
+}
+
+
+.ql-editor::-moz-selection {
+  background: yellow;
+}
+
+
+
+/* 编辑器浮动小飞机图标 */
+.editor .plane-icon {
+  position: absolute;
+  width: 43px; /* 设置背景的宽度 */
+  height: 43px; /* 设置背景的高度 */
+  background-color: white; /* 设置背景颜色 */
+  border-radius: 15%; /* 使背景为圆角正方形 */
+  display: flex; /* 使用 Flexbox 居中对齐图标 */
+  align-items: center; /* 垂直居中 */
+  justify-content: center; /* 水平居中 */
+  pointer-events: none; /* 使图标不干扰鼠标事件 */
+  z-index: 1000; /* 确保图标在编辑器内容上方 */
+  filter: drop-shadow(0px 3px 10px rgba(148, 148, 148, 0.5));
+}
+
+
+.ql-toolbar .ql-formats {
+  display: flex;
+  align-items: center;
+  margin: 3px 0 0 0;
+}
+
+.ql-toolbar button {
+  margin: 0 5px;
+  padding: 5px;
+  border: none;
+  background: #f0f0f0;
+  border-radius: 4px;
+  transition: background-color 0.3s;
+}
+
+::selection {
+  background-color: #FFEC88; 
+  color: black; 
+}
