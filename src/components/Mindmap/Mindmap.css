@@ -1,0 +1,14 @@
+/* 主内容区域样式 */
+.main-content {
+    width: 100%; /* 初始设置为100%确保在侧边栏收起时占据整个页面 */
+    flex-grow: 1; /* 使用flex-grow来填充剩余空间 */
+    padding: 20px;
+    background-color: #ffffff; /* 默认背景颜色 */
+    transition: width 0.3s ease; /* 过渡宽度 */
+  }
+  
+  /* 当侧边栏展开时，主内容区域的样式 */
+  .sidebar.open + .main-content {
+    width: calc(60% - 40px); /* 主内容区域的宽度 */
+  }
+

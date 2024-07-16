@@ -1,0 +1,83 @@
+.retrieved-facts {
+    display: flex;
+    flex-direction: column;
+    margin-top: 10px;
+
+    .retrieved-facts-header {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        height: 35px;
+        width: 100%;
+        font-size: 15px;
+        font-weight: 600;
+        background-color: rgba(239, 239, 239, 1);
+        border-radius: 6px;
+        padding: 0 14px;
+    }
+
+    .retrieved-facts-content {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        margin-top: 6px;
+        overflow: scroll;
+        position: absolute;
+        top: 262px;
+        bottom: 14px;
+        left: 14px;
+        right: 14px;
+
+        .fact-config {
+            margin-bottom: 5px;
+
+            .fact-config-header {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 31px;
+                width: 100%;
+                background-color: rgba(225, 235, 243, 1);
+                border-radius: 6px;
+                font-weight: 600;
+            }
+
+            .fact-config-panel {
+                display: flex;
+                margin-top: 6px;
+                width: 100%;
+                
+            }
+        }
+        .data-source {
+            .data-source-header {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 31px;
+                width: 100%;
+                background-color: rgba(225, 235, 243, 1);
+                border-radius: 6px;
+                font-weight: 600;
+            }
+        }
+        .panel-footer {
+            text-align: right;
+            margin-top: 6px;
+        }
+    }
+}
+
+.ant-collapse-header {
+    padding: 7px 16px !important;
+}
+
+.ant-collapse {
+    background-color: #ffffff;
+}
+
+.ant-collapse-item-active {
+    background-color: rgba(179, 215, 238, 0.06) !important;
+    border: 1px solid rgba(99, 153, 188, 1) !important;
+}
+

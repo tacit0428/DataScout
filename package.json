@@ -1,15 +1,21 @@
 {
-  "name": "my-app",
+  "name": "retrieval-tool",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
+    "antd": "^5.18.3",
+    "nanoid": "^5.0.7",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-flow-renderer": "^10.3.17",
+    "react-rnd": "^10.4.11",
     "react-scripts": "5.0.1",
-    "web-vitals": "^2.1.4"
+    "reactflow": "^11.11.4",
+    "web-vitals": "^2.1.4",
+    "zustand": "^4.5.4"
   },
   "scripts": {
     "start": "react-scripts start",

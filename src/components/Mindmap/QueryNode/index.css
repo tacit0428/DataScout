@@ -1,0 +1,22 @@
+.ant-card {
+    border: 1px solid red;
+    border-radius: 7px; 
+
+    .ant-card-head {
+        min-height: 8px;
+        padding: 0;
+        border-bottom: 0px;
+
+        /* .ant-card-head-wrapper {
+            min-height: 32px;
+        }
+
+        .ant-card-head-title {
+            min-height: 32px;
+        } */
+    }
+
+    .ant-card-body {
+        padding: 0 8px;
+    }
+}

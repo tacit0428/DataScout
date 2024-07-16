@@ -1,0 +1,35 @@
+/* Header.css */
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    /* padding: 10px 20px; */
+    /* background-color: #ffffff;  */
+    /* color: #000000; */
+    /* position: fixed;  */
+    /* top: 0; */
+    /* width: 100%; */
+    /* z-index: 1000;  */
+    /* box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);  */
+  }
+  
+  .header .logo {
+    display: flex;
+    align-items: center;
+  }
+  
+  .header .logo img {
+    width: 30px;
+    height: 30px;
+    margin-right: 10px; /* 控制图标和文本之间的间距 */
+  }
+  
+  .header .logo-text {
+    font-size: 1.5em;
+    font-weight: bold;
+  }
+
+  .ant-layout-header {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);  
+  }
+  

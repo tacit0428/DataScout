@@ -1,0 +1,41 @@
+/* 侧边栏样式 */
+.sidebar {
+    height: 100%;
+    width: 0;
+    min-width: 0; /* 设置最小宽度为0，确保在收起时不占据空间 */
+    background: #f0f0f0;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+    transition: width 0s ease, visibility 0s ease 0s; /* 过渡宽度和visibility属性 */
+    transform: translateX(-100%);
+    position: relative;
+    z-index: 1; /* 确保侧边栏在上层 */
+    visibility: hidden; /* 初始时隐藏侧边栏内容 */
+  }
+  
+  .sidebar.open {
+    width: 40%; /* 当侧边栏展开时再设置宽度 */
+    min-width: 300px; /* 设置最小宽度，确保侧边栏不会过窄 */
+    transform: translateX(0);
+    visibility: visible; /* 展开时显示侧边栏内容 */
+    transition-delay: 0s; /* 延迟过渡时间，确保visibility属性立即生效 */
+  }
+  
+  /* 侧边栏切换按钮样式 */
+  .sidebar .toggle-btn {
+    position: absolute;
+    top: 50%;
+    right: -30px;
+    width: 30px;
+    height: 30px;
+    background: #1890ff;
+    color: white;
+    border: none;
+    border-radius: 0 4px 4px 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    visibility: visible;
+  }
+  

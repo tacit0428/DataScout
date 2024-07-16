@@ -1,0 +1,19 @@
+.window {
+    width: 100%;
+    background-color: #fff;
+    padding: 0 14px;
+}
+
+.window-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 45px;
+    font-family: PingFang SC;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.window-content {
+    /* padding: 10px; */
+}
