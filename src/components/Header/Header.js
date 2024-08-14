@@ -7,7 +7,7 @@ const HeaderBar = () => {
     <div className="header">
       <div className="logo">
       <img src={logo} alt="Logo" />
-        <div className="logo-text">Search Platform</div>
+        <div className="logo-text">DataScout</div>
       </div>
     </div>
   );

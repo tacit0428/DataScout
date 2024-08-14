@@ -1,21 +1,42 @@
 import React, {useState, useRef, useEffect} from "react";
 import { Rnd } from "react-rnd";
-import { Button } from "antd";
+import { Button,  Collapse } from "antd";
 import {
     MinusOutlined,
     CloseOutlined,
     PushpinOutlined,
     PushpinFilled,
-    ArrowsAltOutlined
+    ArrowsAltOutlined,
+    EditFilled,
+    CaretRightOutlined
   } from '@ant-design/icons';
 import QueryEditor from "./QueryEditor";
 import RetrievedFacts from "./RetrievedFacts";
 import './index.css'
 
+import { useStore } from '../../store/store';
+import { shallow } from 'zustand/shallow';
+
+const selector = (store) => ({
+  nodes: store.nodes,
+  edges: store.edges,
+  onNodesChange: store.onNodesChange,
+  onEdgesChange: store.onEdgesChange,
+  addChildNode: store.addChildNode,
+  addRootNode: store.addRootNode,
+  addEdge: store.addEdge,
+  currentNode: store.currentNode,
+  editorRef: store.editorRef
+})
+
 function ConfigWindow(props) {
+    const store = useStore()
     const [isMinimized, setIsMinimized] = useState(false);
-    const [isFixed, setIsFixed] = useState(false);
-    const [size, setSize] = useState({ width: 420, height: '85%' });
+    const [isFixed, setIsFixed] = useState(false); // 避免干扰文字选中操作
+    const [pushpin, setPushpin] = useState(false)
+    const [isRetrieving, setIsRetrieving] = useState(false)
+    const [isRetrieved, setIsRetrieved] = useState(false) // 用于区分未检索状态和未检索到fact的状态
+    const [size, setSize] = useState({ width: 400, height: '85%' });
     const [position, setPosition] = useState({ x: 0, y: 0 });
     const rndRef = useRef();
 
@@ -24,8 +45,9 @@ function ConfigWindow(props) {
       };
     
     const handleFixToggle = () => {
-        setIsFixed(!isFixed);
+        setPushpin(!pushpin)
     };
+
 
     useEffect(() => {
         if (rndRef.current && rndRef.current.getSelfElement()) {
@@ -56,6 +78,29 @@ function ConfigWindow(props) {
         zIndex: 100
     };
 
+
+    const PanelHeader = ({title}) => {
+        return (
+            <div className="panel-header">
+                <EditFilled style={{color: 'rgba(133, 140, 144, 1)'}}/>
+                <div style={{marginLeft: '10px'}}>{title}</div>
+            </div>
+        )
+    }
+
+    const items = [ 
+        {
+            key: 0,
+            label: <PanelHeader title='Query Editor' />,
+            children: <QueryEditor setIsFixed={setIsFixed} setIsRetrieving={setIsRetrieving} setIsRetrieved={setIsRetrieved} />,
+        },
+        {
+            key: 1,
+            label: <PanelHeader title='Retrvieved Data Facts' />,
+            children: <RetrievedFacts setIsFixed={setIsFixed} isRetrieving={isRetrieving} isRetrieved={isRetrieved} />,
+        }
+]
+
     return (
         <Rnd
             style={style}
@@ -71,7 +116,7 @@ function ConfigWindow(props) {
               setPosition(position);
             }}
             enableResizing={!isMinimized}
-            disableDragging={isFixed}
+            disableDragging={isFixed || pushpin}
             bounds="parent"
             ref={rndRef}
         >
@@ -80,14 +125,23 @@ function ConfigWindow(props) {
                     <div className="window-name">Retrieval Details</div>
                     <div className="window-btn-group">
                         <Button type="text" shape="circle" icon={isMinimized? <ArrowsAltOutlined /> : <MinusOutlined />} onClick={handleMinimize}></Button>
-                        <Button type="text" shape="circle" icon={isFixed? <PushpinFilled /> : <PushpinOutlined />} onClick={handleFixToggle}></Button>
-                        <Button type="text" shape="circle" icon={<CloseOutlined />} onClick={props.closeConfig}></Button>
+                        <Button type="text" shape="circle" icon={pushpin? <PushpinFilled /> : <PushpinOutlined />} onClick={handleFixToggle}></Button>
+                        <Button type="text" shape="circle" icon={<CloseOutlined />} onClick={()=>{store.setShowConfig(false)}}></Button>
                     </div>
                 </div>
                 {!isMinimized && (
                     <div className="window-content">
-                        <QueryEditor />
-                        <RetrievedFacts />
+                        {/* <QueryEditor setIsFixed={setIsFixed}/>
+                        <RetrievedFacts /> */}
+                        <Collapse 
+                            className="window-collapse"
+                            items={items} 
+                            bordered={false}
+                            defaultActiveKey={['0', '1']} 
+                            ghost={true}
+                            expandIconPosition={'end'}
+                            expandIcon={({ isActive }) => <div className="expand-icon"><CaretRightOutlined rotate={isActive ? 90 : 180} style={{color: '#B2B2B2'}}/></div>}
+                        />
                     </div>
                 )}
             </div>

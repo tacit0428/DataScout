@@ -1,7 +1,10 @@
 .retrieved-facts {
-    display: flex;
-    flex-direction: column;
-    margin-top: 10px;
+    /* display: flex; */
+    /* flex-direction: column; */
+    margin-top: 6px;
+    /* height: 100%; */
+    /* overflow: hidden; */
+    /* flex: 1; */
 
     .retrieved-facts-header {
         display: flex;
@@ -20,16 +23,12 @@
         display: flex;
         flex-direction: column;
         justify-content: space-between;
-        margin-top: 6px;
+        /* margin-top: 6px; */
         overflow: scroll;
-        position: absolute;
-        top: 262px;
-        bottom: 14px;
-        left: 14px;
-        right: 14px;
 
         .fact-config {
             margin-bottom: 5px;
+            padding: 0 16px;
 
             .fact-config-header {
                 display: flex;
@@ -45,11 +44,12 @@
             .fact-config-panel {
                 display: flex;
                 margin-top: 6px;
-                width: 100%;
-                
+                width: 100%;   
             }
         }
         .data-source {
+            padding: 0 16px;
+
             .data-source-header {
                 display: flex;
                 justify-content: center;
@@ -60,24 +60,126 @@
                 border-radius: 6px;
                 font-weight: 600;
             }
+            .data-source-table {
+                width: 100%;
+            }
         }
         .panel-footer {
             text-align: right;
-            margin-top: 6px;
+            padding: 8px 16px;
+            border-top: 1px solid #BAD2E2;
         }
     }
 }
 
-.ant-collapse-header {
+.fact-collapse {
+    overflow: scroll;
+    margin-top: 6px;
+    height: 100%;
+
+    /* 空态时的样式 */
+    .blank-view {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+
+        .blank-placeholder {
+            width: 220px;
+            margin-bottom: 20px;
+        }
+
+        .blank-tip {
+            color: rgba(206, 206, 206, 1);
+            font-size: 15px;
+        }
+    }
+
+    .fact-config {
+        margin-bottom: 5px;
+        padding: 0 16px;
+
+        .fact-config-header {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 31px;
+            width: 100%;
+            background-color: rgba(225, 235, 243, 1);
+            border-radius: 6px;
+            font-weight: 600;
+        }
+
+        .fact-config-panel {
+            display: flex;
+            margin-top: 6px;
+            width: 100%;   
+        }
+    }
+    .data-source {
+        padding: 0 16px;
+
+        .data-source-header {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 31px;
+            width: 100%;
+            background-color: rgba(225, 235, 243, 1);
+            border-radius: 6px;
+            font-weight: 600;
+        }
+        .data-source-table {
+            width: 100%;
+        }
+    }
+    .panel-footer {
+        display: flex;
+        justify-content: space-between;
+        text-align: right;
+        padding: 8px 16px;
+        border-top: 1px solid #BAD2E2;
+
+        .data-source-name {
+            display: flex;
+            align-items: center;
+            margin-right: 10px;
+            text-align: left;
+            white-space: nowrap; /* 防止文本换行 */
+            overflow: hidden; /* 隐藏超出容器的内容 */
+            text-overflow: ellipsis; 
+            color: rgba(188, 188, 188, 1);
+            font-size: 12px;
+        }
+    }
+}
+
+
+.fact-collapse > .ant-collapse-item > .ant-collapse-header {
     padding: 7px 16px !important;
 }
 
-.ant-collapse {
-    background-color: #ffffff;
-}
-
-.ant-collapse-item-active {
-    background-color: rgba(179, 215, 238, 0.06) !important;
+.fact-collapse .ant-collapse-item-active {
+    background-color: rgba(205, 236, 255, 0.08) !important;
     border: 1px solid rgba(99, 153, 188, 1) !important;
 }
+
+.ant-table-cell {
+    padding: 10px !important;
+}
+
+.ant-pagination {
+    margin: 8px 0 !important;
+}
+
+.blank-spinner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+
 

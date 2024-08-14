@@ -1,8 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Button, Dropdown, Menu, Input } from 'antd';
-import ReactQuill from 'react-quill';
+import ReactQuill, { Quill } from 'react-quill';
+import ImageResize from 'quill-image-resize-module-react';
 import { saveAs } from 'file-saver';
-
+import { ReactFlowProvider, useReactFlow } from 'reactflow';
+import { useNavigate } from 'react-router-dom';
+import { v4 as uuidv4 } from 'uuid'
 import 'react-quill/dist/quill.snow.css';
 import './Sidebar.css';
 import jsPDF from 'jspdf';
@@ -14,6 +17,24 @@ import exportIcon from '../../assets/export_icon.svg';
 import editIcon from '../../assets/edit_icon.svg';
 import planeIcon from '../../assets/plane_icon.svg'; 
 
+import * as api from '../../axios/api'
+import { BalloonLayout } from '../Mindmap/Layout/MDSLayout';
+
+import { useStore } from '../../store/store';
+import { shallow } from 'zustand/shallow';
+
+const selector = (store) => ({
+  addRootNode: store.addRootNode,
+  addChildNode: store.addChildNode,
+  addChildNodeForRoot: store.addChildNodeForRoot,
+  setEditorRef: store.setEditorRef,
+  setEdge: store.setEdge,
+  setNode: store.setNode,
+})
+
+Quill.register('modules/imageResize', ImageResize);
+window.Quill = Quill
+
 const modules = {
   toolbar: [
     ['bold', 'underline','italic', 'strike', 'blockquote'],
@@ -24,6 +45,10 @@ const modules = {
     [{ 'align': '' }, { 'align': 'center' }, { 'align': 'right' }, { 'align': 'justify' }],
     ['link', 'image', 'video'],
   ],
+  imageResize: {
+    parchment: Quill.import('parchment'),
+    modules: ['Resize', 'DisplaySize']
+  }
 };
 
 const formats = [
@@ -38,8 +63,14 @@ const formats = [
 const Sidebar = ({ visible, toggleDrawer }) => {
   const [editorContent, setEditorContent] = useState('');
   const [title, setTitle] = useState('');
-  const editorRef = useRef(null);
   const [selectionRect, setSelectionRect] = useState(null);
+  const [selectText, setSelectText] = useState('')
+  const editorRef = useRef(null);
+  const reactQuillRef = useRef(null)
+  // const store = useStore(selector, shallow);
+  const store = useStore()
+  const { fitView } = useReactFlow();
+  // const uuid = uuidv4()
 
   const updateSelection = () => {
     const selection = window.getSelection();
@@ -48,9 +79,10 @@ const Sidebar = ({ visible, toggleDrawer }) => {
       const rect = range.getBoundingClientRect();
       if (rect.width > 0 && rect.height > 0 && !selection.isCollapsed) {
         setSelectionRect({
-          left: rect.right, // 调整图标位置到文字中心位置
-          top: rect.top - 80, // 调整图标位置更接近文字
+          left: rect.right + 5, // 调整图标位置到文字中心位置
+          top: rect.top - 50, // 调整图标位置更接近文字
         });
+        setSelectText(selection.toString())
       } else {
         setSelectionRect(null); // 如果没有选中内容，则隐藏图标
       }
@@ -60,6 +92,8 @@ const Sidebar = ({ visible, toggleDrawer }) => {
   };
 
   useEffect(() => {
+    store.setEditorRef(reactQuillRef)
+
     const handleMouseUp = () => {
       updateSelection();
     };
@@ -111,6 +145,12 @@ const Sidebar = ({ visible, toggleDrawer }) => {
     saveAs(blob, `${title || 'document'}.html`);
   };
 
+  const exportToNewPage = () => {
+    localStorage.setItem(`newsTitle-${store.pageId}`, title);
+    localStorage.setItem(`newsContent-${store.pageId}`, editorContent);
+    window.open(`/#/news?id=${store.pageId}`, '_blank');
+  }
+
   const menu = (
     <Menu>
       <Menu.Item key="1" onClick={exportToWord}>
@@ -119,11 +159,92 @@ const Sidebar = ({ visible, toggleDrawer }) => {
       <Menu.Item key="2" onClick={exportToPDF}>
         PDF
       </Menu.Item>
-      <Menu.Item key="3" onClick={exportToHTML}>
-        HTML
+      <Menu.Item key="3" onClick={exportToNewPage}>
+        Page
       </Menu.Item>
     </Menu>
   );
+  
+  // const addQuery = (nodes, edges, stance) => {
+  //   // setIsDecompose(true)
+  //   api.decomposeQuery(selectText, 0, stance).then(response=>{
+  //     const parentNode = nodes[0]
+  //     const response_data = response.data.data
+  //     const { directionList, queryList } = response_data
+  //     console.log('root addnode', directionList, queryList)
+  //     // const newstance = stance == 'supportive' ? 'support' : 'oppose'
+  //     const addPositions = BalloonLayout(nodes, edges, parentNode, stance, store.setNode, queryList.length)
+  //     const res = store.addChildNode(parentNode, queryList, directionList, stance, addPositions)
+  //     console.log('res1', res)
+  //     return res
+  //     // setIsDecompose(false)
+  //   }).catch(error => {
+  //     console.error(error)
+  //     return {nodes: nodes, edges: []}
+  //     // setIsDecompose(false)
+  //   })
+  // } 
+  // }
+
+  const addQuery = async (nodes, edges) => {
+    try {
+        const response = await api.decomposeQuery(selectText, 0, 'support');
+        const response_data = response.data.data;
+        const { directionList, queryList } = response_data;
+
+        const response_oppose = await api.decomposeQuery(selectText, 0, 'oppose');
+        const response_data_oppose = response_oppose.data.data;
+        const { directionList: directionList_oppose, queryList: queryList_oppose } = response_data_oppose;
+
+        const parentNode = nodes[0];
+        const res = BalloonLayout(nodes, edges, parentNode, 'support', store.setNode, queryList.length);
+        const res_oppose = BalloonLayout(nodes, edges, parentNode, 'oppose', store.setNode, queryList_oppose.length);
+
+        const newQueryList = queryList.concat(queryList_oppose)
+        const newDirectionList = directionList.concat(directionList_oppose)
+        const newAddPositions = res.positions.concat(res_oppose.positions)
+
+        store.addChildNodeForRoot(parentNode, newQueryList, newDirectionList, newAddPositions, queryList.length);
+    } catch (error) {
+        console.error(error);
+    }
+};
+  const addQuery1 = (nodes, edges, stance) => {
+    const parentNode = nodes[0]
+    const addPositions = BalloonLayout(nodes, edges, parentNode, stance, store.setNode)
+    
+    const queryList = ["What is China's recent GDP growth rate",
+    "How are China's major industries growing",
+    "How are China's consumption and investment levels changing"]
+    const queryThemeList = ['economy', 'operating and maintenance costs', 'supply side']
+    // const newstance = stance == 'supportive' ? 'support' : 'oppose'
+    const res = store.addChildNode(parentNode, queryList, queryThemeList, stance, addPositions)
+    return res
+  }
+
+  const onAddStatement = async ()=>{
+    // 1. 清除当前画布所有节点（或保存）
+    if (store.nodes) {
+      store.setNode([])
+      store.setEdge([])  
+    }
+
+    // 2. 添加statement节点
+    const nodes = store.addRootNode(selectText)
+
+    // 3. 请求生成支持和否定的query
+    store.setIsRootDecompose(true)
+    await addQuery(nodes, [])
+    store.setIsRootDecompose(false)
+  }
+
+  useEffect(() => {
+    if (store.isRootDecompose) {
+      setTimeout(() => {
+        fitView();
+      }, 200);
+    }
+  }, [store.nodes, store.isRootDecompose]);
 
   return (
     <div className={`sidebar ${visible ? 'open' : ''}`}>
@@ -156,6 +277,7 @@ const Sidebar = ({ visible, toggleDrawer }) => {
             onChange={setEditorContent}
             modules={modules}
             formats={formats}
+            ref={reactQuillRef}
           />
           {selectionRect && (
             <Button
@@ -172,10 +294,7 @@ const Sidebar = ({ visible, toggleDrawer }) => {
                 height: '40px', 
                 borderRadius: '20%', 
               }}
-              onClick={() => {
-                // 添加点击事件处理//待完成：选中之后放到statement处
-                console.log('Plane icon button clicked!');
-              }}
+              onClick={onAddStatement}
             >
               <img src={planeIcon} alt="plane" style={{ width: '18px', height: '18px' }} />
             </Button>

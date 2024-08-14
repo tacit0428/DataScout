@@ -3,47 +3,94 @@
     flex-direction: column;
     border: 1px solid #AFAFAF;
     border-radius: 7px; */
-
-    .ant-card {
-        border: 1px solid #AFAFAF;
-        border-radius: 7px; 
-
-        .ant-card-head {
-            min-height: 8px;
-            padding: 0;
-            border-bottom: 0px;
-        }
-
-        .ant-card-body {
-            padding: 8px;
-        }
+    .rootnode-head {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 11px;
+        color: #fff;
+        height: 18px;
+        line-height: 12px;
+        background: #7B6D64;
     }
 
-    .truncated {
-        display: -webkit-box;
-        -webkit-box-orient: vertical;
-        -webkit-line-clamp: 2; /* 显示的行数 */
-        overflow: hidden;
-        text-overflow: ellipsis;
-        margin-block-start: 8px;
-        margin-block-end: 8px;
-    }
-
-    .ant-popover {
-        width: 50px
-    }
-
-    .add-btn {
-        display: block;
+    .rootnode-btn {
         position: absolute;
-        right: 0px;
-        top: 50%;
-        transform: translate(50%, -50%);
+        top: 0px;
+        /* right: 0px; */
+        z-index: 100;
+        display: flex;
+        align-items: center;
+        width: 100%;
+        justify-content: space-between;
     }
 
-    /* .ant-btn-default:not(.ant-btn-disabled):hover{
-        color: violet;
-        border-color: violet;
-    } */
+    .btn-opacity {
+        opacity: 0;
+    }
+
+    .add-left {
+        position: absolute;
+        top: 50%;
+        left: 0;
+        transform:translate(-50%,-50%);
+        z-index: 100;
+        border: 2px solid #7B6D64;
+        opacity: 0;
+    }
+
+    .add-left:hover {
+        opacity: 1;
+    }
+
+    .add-right {
+        position: absolute;
+        top: 50%;
+        right: 0;
+        transform:translate(50%,-50%);
+        z-index: 100;
+        border: 2px solid #7B6D64;
+        opacity: 0;
+    }
+
+    .add-right:hover {
+        opacity: 1;
+    }
 
 }
+
+.truncated {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3; /* 显示的行数 */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-top: 10px;
+    /* margin-block-start: 8px;
+    margin-block-end: 8px; */
+}
+
+.ant-card {
+    /* border: 1px solid #AFAFAF; */
+    border-radius: 7px; 
+
+    .ant-card-head {
+        min-height: 8px;
+        padding: 0;
+        border-bottom: 0px;
+    }
+
+    .ant-card-body {
+        padding: 0 8px;
+        /* margin-top: 10px; */
+    }
+}
+
+.ant-popover {
+    width: 50px
+}
+
+.ant-spin-blur {
+    opacity: 1 !important;
+}
+

@@ -1,0 +1,44 @@
+.news-container {
+    padding: 15% 10%;
+
+    .news-title {
+        width: 100%;
+        font-size: 24px;
+        color: rgb(135, 135, 135);
+        font-weight: 500;
+    }
+
+    .news-date {
+        margin-top: 20px;
+        font-size: 16px;
+        color: rgba(155, 155, 155, 1);
+    }
+}
+
+img {
+    max-width: 400px; 
+    display: block;
+    margin: 0 auto;
+}
+
+.ql-align-center {
+    display: flex;
+    justify-content: center;
+}
+
+.ql-size-small {
+    font-size: small;
+}
+
+.ql-size-large {
+    font-size: large;
+}
+
+@media (max-width: 500px) {
+    img {
+        max-width: calc(100vw - 40%); 
+    }
+    p {
+        line-height: 23px;
+    }
+}
