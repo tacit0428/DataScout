@@ -1,7 +1,7 @@
 {
   "files": {
-    "main.css": "/DataScout/static/css/main.164d7d97.css",
-    "main.js": "/DataScout/static/js/main.61116172.js",
+    "main.css": "/DataScout/static/css/main.b67f6fc3.css",
+    "main.js": "/DataScout/static/js/main.de7a633c.js",
     "static/js/213.4d2a0b63.chunk.js": "/DataScout/static/js/213.4d2a0b63.chunk.js",
     "static/js/833.f8749632.chunk.js": "/DataScout/static/js/833.f8749632.chunk.js",
     "static/js/453.e405da2d.chunk.js": "/DataScout/static/js/453.e405da2d.chunk.js",
@@ -13,14 +13,14 @@
     "static/media/save_icon.svg": "/DataScout/static/media/save_icon.41d003282b78ad6a7c0eccaadf6b4107.svg",
     "index.html": "/DataScout/index.html",
     "static/media/edit_icon.svg": "/DataScout/static/media/edit_icon.96ef81558e0bd17bf524a28d381d623d.svg",
-    "main.164d7d97.css.map": "/DataScout/static/css/main.164d7d97.css.map",
-    "main.61116172.js.map": "/DataScout/static/js/main.61116172.js.map",
+    "main.b67f6fc3.css.map": "/DataScout/static/css/main.b67f6fc3.css.map",
+    "main.de7a633c.js.map": "/DataScout/static/js/main.de7a633c.js.map",
     "213.4d2a0b63.chunk.js.map": "/DataScout/static/js/213.4d2a0b63.chunk.js.map",
     "833.f8749632.chunk.js.map": "/DataScout/static/js/833.f8749632.chunk.js.map",
     "453.e405da2d.chunk.js.map": "/DataScout/static/js/453.e405da2d.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.164d7d97.css",
-    "static/js/main.61116172.js"
+    "static/css/main.b67f6fc3.css",
+    "static/js/main.de7a633c.js"
   ]
 }
