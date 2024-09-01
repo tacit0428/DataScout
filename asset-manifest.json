@@ -1,7 +1,7 @@
 {
   "files": {
     "main.css": "/DataScout/static/css/main.cc674223.css",
-    "main.js": "/DataScout/static/js/main.ced80349.js",
+    "main.js": "/DataScout/static/js/main.0a008a58.js",
     "static/js/213.4d2a0b63.chunk.js": "/DataScout/static/js/213.4d2a0b63.chunk.js",
     "static/js/833.f8749632.chunk.js": "/DataScout/static/js/833.f8749632.chunk.js",
     "static/js/453.e405da2d.chunk.js": "/DataScout/static/js/453.e405da2d.chunk.js",
@@ -14,13 +14,13 @@
     "index.html": "/DataScout/index.html",
     "static/media/edit_icon.svg": "/DataScout/static/media/edit_icon.96ef81558e0bd17bf524a28d381d623d.svg",
     "main.cc674223.css.map": "/DataScout/static/css/main.cc674223.css.map",
-    "main.ced80349.js.map": "/DataScout/static/js/main.ced80349.js.map",
+    "main.0a008a58.js.map": "/DataScout/static/js/main.0a008a58.js.map",
     "213.4d2a0b63.chunk.js.map": "/DataScout/static/js/213.4d2a0b63.chunk.js.map",
     "833.f8749632.chunk.js.map": "/DataScout/static/js/833.f8749632.chunk.js.map",
     "453.e405da2d.chunk.js.map": "/DataScout/static/js/453.e405da2d.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.cc674223.css",
-    "static/js/main.ced80349.js"
+    "static/js/main.0a008a58.js"
   ]
 }
