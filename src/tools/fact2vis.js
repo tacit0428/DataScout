@@ -89,8 +89,18 @@ const isSuitableForMap = (fact, data) => {
     }
 }
 
+const findFieldType = (field, schema) => {
+    let type = 'temporal'   // 默认就当是temporal
+    let fieldSchema = schema.filter((item)=>{
+        return item.field == field
+    })
+    if (fieldSchema.length) {
+        type = fieldSchema[0].type
+    }
+    return type
+}
 
-export const fact2chart = function (uuid, fact, data, width, height, setChartName, compound = false) {
+export const fact2chart = function (uuid, fact, data, schema, width, height, setChartName) {
     let spec = _.cloneDeep(defaultSpec);
     const filteredData = datafilter(data, fact.subspace);
 
@@ -175,6 +185,7 @@ export const fact2chart = function (uuid, fact, data, width, height, setChartNam
             spec.encoding['y']['aggregation'] = fact.measure[0].aggregate;
             spec.encoding['x'] = {};
             spec.encoding['x']['field'] = fact.breakdown[0];
+            spec.encoding['x']['type'] = findFieldType(fact.breakdown[0], schema)
             if (fact.focus.length > 1) {
                 spec.style = {
                     'difference': [fact.focus[0].value, fact.focus[1].value],
@@ -187,6 +198,7 @@ export const fact2chart = function (uuid, fact, data, width, height, setChartNam
             spec.encoding['y']['aggregation'] = fact.measure[0].aggregate;
             spec.encoding['x'] = {};
             spec.encoding['x']['field'] = fact.breakdown[0];
+            spec.encoding['x']['type'] = findFieldType(fact.breakdown[0], schema)
             if (fact.focus.length > 1) {
                 spec.style = {
                     'difference': [fact.focus[0].value, fact.focus[1].value],
@@ -199,6 +211,7 @@ export const fact2chart = function (uuid, fact, data, width, height, setChartNam
             spec.encoding['y']['aggregation'] = fact.measure[0].aggregate;
             spec.encoding['x'] = {};
             spec.encoding['x']['field'] = fact.breakdown[0];
+            spec.encoding['x']['type'] = findFieldType(fact.breakdown[0], schema)
             if (fact.focus.length > 0) {
                 spec.style = {
                     'focus': [],
@@ -236,12 +249,14 @@ export const fact2chart = function (uuid, fact, data, width, height, setChartNam
             spec.encoding['y']['aggregation'] = fact.measure[0].aggregate;
             spec.encoding['x'] = {};
             spec.encoding['x']['field'] = fact.breakdown[0];
+            // spec.encoding['x']['type'] = findFieldType(fact.breakdown[0], schema)
             spec.style = {
                 'focus': '',
             }
             let validFocus = false
             if (fact.focus.length) {
                 for (let focus of fact.focus) {
+                    if (focus.field == fact.breakdown[0]) {
                     let focusItem = filteredData.filter(d=>d[focus.field]==focus.value)
                     if (focusItem.length) {
                         spec.style = {
@@ -250,7 +265,7 @@ export const fact2chart = function (uuid, fact, data, width, height, setChartNam
                         fact.focus = [focus]
                         validFocus = true
                         break
-                    }
+                    }}
                 }
             }
             if (!validFocus) {
@@ -286,6 +301,7 @@ export const fact2chart = function (uuid, fact, data, width, height, setChartNam
             spec.encoding['y']['aggregation'] = fact.measure[0].aggregate;
             spec.encoding['x'] = {};
             spec.encoding['x']['field'] = fact.breakdown[0];
+            spec.encoding['x']['type'] = findFieldType(fact.breakdown[0], schema)
             if (fact.focus.length > 0) {
                 spec.style = {
                     'proportion': fact.focus[0].value,
@@ -365,6 +381,7 @@ export const fact2chart = function (uuid, fact, data, width, height, setChartNam
             spec.encoding['y']['aggregation'] = fact.measure[0].aggregate;
             spec.encoding['x'] = {};
             spec.encoding['x']['field'] = fact.breakdown[0];
+            spec.encoding['x']['type'] = findFieldType(fact.breakdown[0], schema)
             if (fact.focus.length > 0) {
                 spec.style = {
                     'focus': [],
@@ -380,6 +397,7 @@ export const fact2chart = function (uuid, fact, data, width, height, setChartNam
     }
 }
 
+
 // legacy code
 export const fact2vis = function (uuid, fact, data, factIndex, width, height, setChartName, updateFact) {
     let spec = _.cloneDeep(defaultSpec);
@@ -394,7 +412,7 @@ export const fact2vis = function (uuid, fact, data, factIndex, width, height, se
             let newFact = {...fact}
             newFact.chart = chartType
             console.log('updatefactchart', newFact)
-            updateFact(newFact, factIndex)
+            updateFact(newFact, factIndex, 'fact2vis')
         }
     }
 

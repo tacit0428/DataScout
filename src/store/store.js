@@ -1,8 +1,8 @@
 import { applyNodeChanges, applyEdgeChanges } from 'reactflow';
-import { forceSimulation, forceManyBody, forceCenter, forceCollide } from 'd3-force';
 import { nanoid } from 'nanoid';
 import { create } from 'zustand';
 import facts from '../tools/demo';
+import { getColor } from '../tools/helper';
 import { v4 as uuidv4 } from 'uuid'
 import _ from 'lodash';
  
@@ -14,16 +14,21 @@ export const useStore = create((set, get) => ({
   editorRef: null,
   showConfig: false, // 是否打开窗口
   isRootDecompose: false,
-  // initialNodes: false,
   spinNodeId: '',
  
   onNodesChange(changes) {
+    if (changes.length == 1 && changes[0].type=='remove') {
+      return
+    }
     set({
       nodes: applyNodeChanges(changes, get().nodes),
     });
   },
  
   onEdgesChange(changes) {
+    if (changes.length == 1 && changes[0].type=='remove') {
+      return
+    }
     set({
       edges: applyEdgeChanges(changes, get().edges),
     });
@@ -63,8 +68,8 @@ export const useStore = create((set, get) => ({
                 queryTheme: queryThemeList[index], 
                 layer:parentNode.data.layer+1, 
                 stance: {label: stance, score: 1},
-                // facts: _.cloneDeep(facts),
-                facts: null,
+                facts: _.cloneDeep(facts),
+                // facts: null,
                 hiddeNum: 0,
                 parentNodeId: parentNode.id,
             },
@@ -85,17 +90,17 @@ export const useStore = create((set, get) => ({
         if (newNode.data?.stance?.label == 'support') {
             // support为绿色
             h = 170
-            // s = 85 - (1 - newNode.data?.stance?.score) * (85-15)/0.5
-            // l = 20 + (1 - newNode.data?.stance?.score) * (75-20)/0.5
-            s = 40
-            l = 70
+            // s = 100 - (1 - newNode.data?.stance?.score) * (100-10)/0.5
+            // l = 10 + (1 - newNode.data?.stance?.score) * (100-10)/0.5
+            s = 55
+            l = 55
         } else {
             // refute为红色
-            h = 343
-            // s = 90 - (1 - newNode.data?.stance?.score) * (90-15)/0.5
-            // l = 25 + (1 - newNode.data?.stance?.score) * (80-25)/0.5
-            s = 50
-            l = 70
+            h = 340
+            // s = 100 - (1 - newNode.data?.stance?.score) * (100-10)/0.5
+            // l = 10 + (1 - newNode.data?.stance?.score) * (100-10)/0.5
+            s = 55
+            l = 55
         }
         strokeWidth = Math.max(12 / newNode.data?.layer, 2)
         return {
@@ -188,6 +193,86 @@ export const useStore = create((set, get) => ({
   //     simulation.alpha(1).alphaDecay(0.08).restart()
   },
 
+  addChildNodeAll(parentNode, retrieveList, stance='support', addPositions=[]) {
+    const newNodeList = retrieveList.map((item, index)=>{
+        return {
+            id: addPositions[index].id,
+            type: 'querynode',
+            data: { 
+                label: parentNode.type == 'rootnode' ? `Query ${addPositions[index].layerIndex}` : `${parentNode.data.label}-${addPositions[index].layerIndex}`, 
+                query: item.query, 
+                queryTheme: item.queryTheme, 
+                layer:parentNode.data.layer+1, 
+                stance: item.stance,
+                facts: item.facts,
+                recommend: item.recommend,
+                hiddeNum: 0,
+                parentNodeId: parentNode.id,
+            },
+            position: addPositions[index].position,
+            positionAbsolute: addPositions[index].positionAbsolute,
+            parentNode: parentNode.id,
+            angles: addPositions[index].angles,
+            radius: addPositions[index].radius,
+            layerIndex: addPositions[index].layerIndex,
+            showVis: false,
+            scale: item.scale
+        }
+    })
+
+    const newEdgeList = newNodeList.map(newNode =>{
+        // let h, s, l, strokeWidth
+        // if (newNode.data?.stance?.label == 'support') {
+        //     h = 170
+        //     s = newNode.data.stance.score ? 100 - (1 - newNode.data.stance.score) * (100-10) : 55
+        //     l = newNode.data.stance.score ? 10 + (1 - newNode.data.stance.score) * (100-10) : 55
+        // } else {
+        //     h = 340
+        //     s = newNode.data.stance.score ? 100 - (1 - newNode.data.stance.score) * (100-10) : 55
+        //     l = newNode.data.stance.score ? 10 + (1 - newNode.data.stance.score) * (100-10) : 55
+        // }
+        let color = getColor(newNode?.data?.stance, newNode?.data?.recommend)
+        let strokeWidth = Math.max(12 / newNode.data?.layer, 2)
+        return {
+            id: nanoid(),
+            type: 'mindmap',
+            source: parentNode.id,
+            target: newNode.id,
+            style: {
+                strokeWidth: strokeWidth,
+                stroke: `hsla(${color.h}, ${color.s}%, ${color.l}%, 1)`,
+            },
+            data: {
+                queryTheme: newNode.data?.queryTheme
+            }
+        }
+    })
+    
+    parentNode.retrieve = true
+    const nodes = [...get().nodes, ...newNodeList]
+    const newNodes = nodes.map(node => ({
+      ...node,
+      style: {
+        ...node.style,
+        opacity: 1,
+      }
+    }))
+
+    const edges = [...get().edges, ...newEdgeList]
+    const newEdges = edges.map(edge => ({
+      ...edge,
+      style: {
+        ...edge.style,
+        opacity: 1,
+      }
+    }))
+
+    set({
+      nodes: newNodes,
+      edges: newEdges,
+    });
+  },
+
   // 添加root节点时，添加第一层子节点
   addChildNodeForRoot(parentNode, queryList, queryThemeList, addPositions, pivot) {
     const newNodeList = queryList.map((item, index)=>{
@@ -251,6 +336,61 @@ export const useStore = create((set, get) => ({
 
   },
 
+  addChildNodeForRootAll(parentNode, retrievelist, addPositions) {
+    const newNodeList = retrievelist.map((item, index)=>{
+        return {
+            id: addPositions[index].id,
+            type: 'querynode',
+            data: { 
+                label: `Query ${index+1}`, 
+                query: item.query, 
+                queryTheme: item.queryTheme, 
+                layer: parentNode.data.layer+1, 
+                stance: item.stance,
+                facts: item.facts,
+                recommend: item.recommend,
+                hiddeNum: 0,
+                parentNodeId: parentNode.id,
+            },
+            position: addPositions[index].position,
+            positionAbsolute: addPositions[index].positionAbsolute,
+            parentNode: parentNode.id,
+            angles: addPositions[index].angles,
+            radius: addPositions[index].radius,
+            layerIndex: index+1,
+            showVis: false,
+            scale: item.scale,
+        }
+    })
+
+    const newEdgeList = newNodeList.map(newNode =>{
+        let color = getColor(newNode.data?.stance, newNode.data?.recommend)
+        let strokeWidth = Math.max(12 / newNode.data?.layer, 2)
+        return {
+            id: nanoid(),
+            type: 'mindmap',
+            source: parentNode.id,
+            target: newNode.id,
+            style: {
+                strokeWidth: strokeWidth,
+                stroke: `hsla(${color.h}, ${color.s}%, ${color.l}%, 1)`,
+            },
+            data: {
+                queryTheme: newNode.data?.queryTheme
+            }
+        }
+    })
+
+    const rootNode = get().nodes[0]
+    rootNode.retrieve = true
+
+    set({
+      nodes: [...get().nodes, ...newNodeList],
+      edges: [...get().edges, ...newEdgeList],
+    });
+
+  },
+
   addEdge(data) {
     const id = nanoid();
     const edge = { id, ...data };
@@ -294,12 +434,6 @@ export const useStore = create((set, get) => ({
       isRootDecompose: isDecompose
     })
   },
-
-  // setInitialNodes(initial) {
-  //   set({
-  //     initialNodes: initial
-  //   })
-  // },
 
   setSpinNodeId(id) {
     set({

@@ -3,7 +3,8 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    /* padding: 10px 20px; */
+    height: 40px; /* 设置固定高度，比默认的64px更窄 */
+    padding: 0 20px; /* 减少左右padding */
     /* background-color: #ffffff;  */
     /* color: #000000; */
     /* position: fixed;  */
@@ -16,20 +17,35 @@
   .header .logo {
     display: flex;
     align-items: center;
+    height: 100%; /* 占满Header高度 */
   }
   
   .header .logo img {
-    width: 30px;
-    height: 30px;
-    margin-right: 10px; /* 控制图标和文本之间的间距 */
+    width: 18px; /* 稍微减小logo尺寸 */
+    height: 18px;
+    margin-right: 8px; /* 减少logo和文字之间的间距 */
+    flex-shrink: 0; /* 防止logo被压缩 */
   }
   
   .header .logo-text {
-    font-size: 1.5em;
+    font-size: 26px; /* 减小字体大小 */
     font-weight: bold;
+    line-height: 1; /* 减少行高 */
   }
 
   .ant-layout-header {
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);  
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* 减少阴影 */
+    height: 40px !important; /* 强制设置Header高度 */
+    line-height: 40px; /* 设置行高与高度一致 */
+    padding: 0; /* 移除默认padding */
+    min-height: 40px !important; /* 强制最小高度 */
+    max-height: 40px !important; /* 强制最大高度 */
+  }
+
+  /* 确保Header内容垂直居中 */
+  .ant-layout-header > * {
+    height: 100%;
+    display: flex;
+    align-items: center;
   }
   

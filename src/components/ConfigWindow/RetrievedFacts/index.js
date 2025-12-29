@@ -24,7 +24,7 @@ const itemDefaultStyle = {
 
 const panelHeader = (relevance, stance) => {
     return (
-        <div style={{display: "flex", justifyContent: "space-between", fontWeight: 500, fontSize: '14px'}}>
+        <div style={{display: "flex", justifyContent: "space-between", fontWeight: 500, fontSize: '16px'}}>
             <div>Relevance: {(relevance * 100).toFixed(2)}%</div>
             <div>Stance: {stance}</div>
         </div>
@@ -125,9 +125,11 @@ const PanelContent = ({fact, table, factIndex, star, nodeId, editorRef, setIsFix
     const width_list = new Array(dataFields.length).fill(80);
     dataRows.forEach(row => {
         dataFields.forEach((field, index)=>{
-            const str = row[field].toString()
-            const col_width = str.length * 10
-            width_list[index] = Math.max(col_width, width_list[index])
+            if (row[field]) {
+                const str = row[field].toString()
+                const col_width = str.length * 10
+                width_list[index] = Math.max(col_width, width_list[index])
+            }
         })
     });
 
@@ -141,12 +143,32 @@ const PanelContent = ({fact, table, factIndex, star, nodeId, editorRef, setIsFix
     })
     const schema = data.schema
 
+    const deleteFact = () => {
+        let factList = store.currentNode.data.facts
+        let newFactList = factList.filter((fact, index)=>{return index !== factIndex})
+        const newNodes = store.nodes.map((node)=>{
+            if (node.id == store.currentNode.id) {
+                return {
+                    ...node,
+                    data: {
+                        ...node.data,
+                        facts: newFactList
+                    }
+                }
+            } else {
+                return node
+            }
+        })
+        store.setNode(newNodes)
+    }
+
     return (
         <div>
             <div className="fact-config">
+                {/* <Button onClick={deleteFact}>delete</Button> */}
                 <div className="fact-config-header">Data Fact Configuration</div>
                 <div className="fact-config-panel">
-                    <EditorView fact={fact} data={dataRows} schema={schema} factIndex={factIndex} star={star} nodeId={nodeId} setChartName={getChartName}/>
+                    <EditorView fact={fact} data={dataRows} schema={schema} factIndex={factIndex} star={star} nodeId={nodeId} setChartName={getChartName} setIsFixed={setIsFixed}/>
                 </div>
             </div>
             <div className="data-source" onMouseLeave={()=>{setIsFixed(false)}} onMouseEnter={()=>{setIsFixed(true)}}>
@@ -155,10 +177,11 @@ const PanelContent = ({fact, table, factIndex, star, nodeId, editorRef, setIsFix
             </div>
             <div className="panel-footer">
                 <div className="data-source-name">{`Source: WDI/${tableName}`}</div>
-                <Button onClick={insertChart}>Add to News</Button>
+                <Button onClick={insertChart}>Add to Story</Button>
             </div>
         </div>
     )
+    
 }
 
 const RetrievedFacts = (props)=>{
@@ -175,7 +198,7 @@ const RetrievedFacts = (props)=>{
             }
         })
         setItems(currentItems)
-    },[store.currentNode])
+    },[store.currentNode, store.currentNode?.data?.facts])
 
     return (
         // <div className="retrieved-facts">
@@ -216,8 +239,10 @@ const RetrievedFacts = (props)=>{
         <div className="blank-view">
             <Spin tip="Retrieving" spinning={props.isRetrieving}>
                 <div className="blank-spinner">
-                    <img className="blank-placeholder" src={props.isRetrieved ? blank2 : blank1} />
-                    <div className="blank-tip">{props.isRetrieved ? 'Unable to retrieve relevant data facts' : 'Please retrieve the relevant data facts'}</div>
+                    {/* <img className="blank-placeholder" src={props.isRetrieved ? blank2 : blank1} />
+                    <div className="blank-tip">{props.isRetrieved ? 'Unable to retrieve relevant data facts' : 'Please retrieve the relevant data facts'}</div> */}
+                    <img className="blank-placeholder" src={blank2} />
+                    <div className="blank-tip">{'Unable to retrieve relevant data facts'}</div>
                 </div>
             </Spin>
         </div>

@@ -90,24 +90,53 @@ const draw = (props) => {
         .ticks(5)
         .tickPadding(5)
         .tickFormat(function (d) {
-            if ((d / 1000000) >= 1) {
-                d = d / 1000000 + "M";
-            } else if ((d / 1000) >= 1) {
-                d = d / 1000 + "K";
+            let absD = Math.abs(d);
+            let suffix = '';
+
+            if ((absD / 1000000000000) >= 1) { // 万亿
+                absD = (absD / 1000000000000);
+                suffix = "T";
+            } else if ((absD / 1000000000) >= 1) { // 十亿
+                absD = (absD / 1000000000);
+                suffix = "B";
+            } else if ((absD / 1000000) >= 1) { // 百万
+                absD = (absD / 1000000);
+                suffix = "M";
+            } else if ((absD / 1000) >= 1) { // 千
+                absD = (absD / 1000);
+                suffix = "K";
             }
-            return d;
+
+            // Check if there are decimal places and they exceed two decimal places
+            absD = absD % 1 === 0 ? absD : absD.toFixed(2);
+
+            let formatted = absD + suffix;
+            return d < 0 ? "-" + formatted : formatted;
         });
 
     let axisY = d3.axisLeft(yScale)
         .ticks(5)
         .tickPadding(5)
         .tickFormat(function (d) {
-            if ((d / 1000000) >= 1) {
-                d = d / 1000000 + "M";
-            } else if ((d / 1000) >= 1) {
-                d = d / 1000 + "K";
+            let absD = Math.abs(d);
+            let suffix = '';
+
+            if ((absD / 1000000000) >= 1) {
+                absD = (absD / 1000000000);
+                suffix = "B";
+            } else if ((absD / 1000000) >= 1) {
+                absD = (absD / 1000000);
+                suffix = "M";
+            } else if ((absD / 1000) >= 1) {
+                absD = (absD / 1000);
+                suffix = "K";
             }
-            return d;
+
+            // Check if there are decimal places and they exceed two decimal places
+            absD = absD % 1 === 0 ? absD : absD.toFixed(2);
+
+            let formatted = absD + suffix;
+            return d < 0 ? "-" + formatted : formatted;
         });
 
     let axis_x = axis.append("g")

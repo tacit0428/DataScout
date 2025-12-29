@@ -20,7 +20,6 @@ function PublishPage() {
     const content = localStorage.getItem(`newsContent-${id}`);
     const currentDate = getCurrentDate();
     
-    
     return (
         <div className='news-container' style={{overflowY: 'hidden'}}>
             <div className='news-title'>{title}</div>

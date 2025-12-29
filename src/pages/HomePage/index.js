@@ -22,13 +22,20 @@ function HomePage() {
   return (
     <ReactFlowProvider>
       <Layout style={{height:"100vh"}}>
-          <Header style={{ backgroundColor: '#fff', boxShadow: '0px 3px 10px 0px rgba(201, 201, 201, 0.5)', zIndex: 100}}>
+          <Header style={{ 
+            backgroundColor: '#fff', 
+            boxShadow: '0px 2px 6px 0px rgba(201, 201, 201, 0.3)', 
+            zIndex: 100,
+            height: '48px', // 设置Header高度
+            lineHeight: '48px' // 设置行高
+          }}>
             <HeaderBar/>
           </Header>
           <Content style={{display: 'flex', flexDirection: 'row', backgroundColor: '#fff'}}>
             <Sidebar visible={visible} toggleDrawer={toggleDrawer} />
             <Mindmap visible={visible} />
-            {store.showConfig && <ConfigWindow />}
+            <ConfigWindow />
+            {/* {store.showConfig && <ConfigWindow />} */}
           </Content>
       </Layout>
     </ReactFlowProvider>

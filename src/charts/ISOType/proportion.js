@@ -3,13 +3,12 @@ import Color from '../../constant/Color';
 import { getAggregatedRows } from './helper';
 import _ from 'lodash';
 
-const offset = 10; // To show whole chart
+const offset = 20; // To show whole chart
 
 const draw = (props) => {
     d3.select('.vis-isotype-' + props.uuid + ' > *').remove();
     let a = '.vis-isotype-' + props.uuid;
     const style = props.spec.style;
-    console.log('draw proportion')
 
     const margin = { top: 10, right: 10, bottom: 10, left: 10 };
     const width = props.width - margin.left - margin.right - offset;

@@ -1,25 +1,14 @@
 import { Handle, Position, useReactFlow, getOutgoers } from 'reactflow';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button, Tooltip, Card, Spin, Input } from 'antd';
 import { PlusCircleOutlined, PlusOutlined } from '@ant-design/icons';
 import * as api from '../../../axios/api'
 import { BalloonLayout } from '../Layout/MDSLayout';
+import { extract_Res, calcStanceAndRel } from '../../../tools/helper';
 import './index.css'
  
 import { useStore } from '../../../store/store';
 import { shallow } from 'zustand/shallow';
-
-const selector = (store) => ({
-  nodes: store.nodes,
-  edges: store.edges,
-  onNodesChange: store.onNodesChange,
-  onEdgesChange: store.onEdgesChange,
-  addChildNode: store.addChildNode,
-  addRootNode: store.addRootNode,
-  addEdge: store.addEdge,
-  setNode: store.setNode
-})
-const { TextArea } = Input;
 
 const hide = (hidden) => (nodeOrEdge) => {
   return {
@@ -29,7 +18,6 @@ const hide = (hidden) => (nodeOrEdge) => {
 };
 
 function RootNode({ id, data }) {
-  // const store = useStore(selector, shallow)
   const store = useStore()
   const { getEdges, getNodes } = useReactFlow();
   const [showBtn, setShowBtn] = useState(false)
@@ -78,20 +66,37 @@ function RootNode({ id, data }) {
     store.setNode(newNodeList)
     const parentNode = store.nodes.filter(item => item.id == id)[0]
     // 左右侧各自规整一遍
-    BalloonLayout(newNodeList, parentNode, 'support', getNodes, getEdges, getOutgoers, store.setNode, 0)
-    BalloonLayout(newNodeList, parentNode, 'oppose', getNodes, getEdges, getOutgoers, store.setNode, 0)
+    // BalloonLayout(newNodeList, parentNode, 'support', getNodes, getEdges, getOutgoers, store.setNode, 0)
+    // BalloonLayout(newNodeList, parentNode, 'oppose', getNodes, getEdges, getOutgoers, store.setNode, 0)
+
+    const {nodes, positions} = BalloonLayout(newNodeList, store.edges, parentNode, 'support', store.setNode, 0)
+    BalloonLayout(nodes, store.edges, parentNode, 'oppose', store.setNode, 0)  // 因为nodes还没有更新，需要用返回的nodes作为输入
+  }
+
+  const findChildNodes = (id, nodes, edges) => {
+    const childEdges = edges.filter(edge=>edge.source == id)
+    const childNodeIds = childEdges.map(edge => edge.target)
+    const childNodes = nodes.filter(node=>childNodeIds.includes(node.id))
+    return childNodes
   }
 
   const onAddQuery = (stance) => {
     const parentNode = store.nodes.find((node) => node.id === id)
+    // const childNodes = findChildNodes(id, store.nodes, store.edges)
+    // let retrieve = childNodes.length ? true : false
+    let retrieve = parentNode.retrieve ? true : false
     store.setIsRootDecompose(true)
-    api.decomposeQuery(data.query, 0, stance).then(response=>{
-      const response_data = response.data.data
-      const { directionList, queryList } = response_data
-      console.log('root addnode', directionList, queryList)
-      // const newstance = stance == 'supportive' ? 'support' : 'oppose'
-      const addPositions = BalloonLayout(store.nodes, store.edges, parentNode, stance, store.setNode, queryList.length)
-      store.addChildNode(parentNode, queryList, directionList, stance, addPositions)
+    // api.decomposeAndRetrieveTest(data.query, data.query, stance, retrieve)
+    api.decomposeAndRetrieve(data.query, data.query, stance).then(response=>{
+      const retrieveList = extract_Res(response)
+      let newRetrieveList = retrieveList.map(obj => {
+        const facts = obj.facts
+        const res = calcStanceAndRel(facts, stance)
+        return { ...obj, relevance: res.relevance, stance: res.stance, scale: res.scale };
+      });
+      console.log('retrievelist', newRetrieveList)
+      const {nodes, positions} = BalloonLayout(store.nodes, store.edges, parentNode, stance, store.setNode, newRetrieveList.length)
+      store.addChildNodeAll(parentNode, newRetrieveList, stance, positions)
       store.setIsRootDecompose(false)
     }).catch(error => {
       console.error(error)
@@ -99,7 +104,25 @@ function RootNode({ id, data }) {
     })
   }
 
-  const onAddQuery2 = (stance) => {
+  // 只展开子查询不检索
+  const onAddQuery1 = (stance) => {
+    const parentNode = store.nodes.find((node) => node.id === id)
+    store.setIsRootDecompose(true)
+    api.decomposeQuery(data.query, 0, stance).then(response=>{
+      const response_data = response.data.data
+      const { directionList, queryList } = response_data
+      console.log('root addnode', directionList, queryList)
+      // const newstance = stance == 'supportive' ? 'support' : 'oppose'
+      const {nodes, positions} = BalloonLayout(store.nodes, store.edges, parentNode, stance, store.setNode, queryList.length)
+      store.addChildNode(parentNode, queryList, directionList, stance, positions)
+      store.setIsRootDecompose(false)
+    }).catch(error => {
+      console.error(error)
+      store.setIsRootDecompose(false)
+    })
+  }
+
+  const onAddQueryDemo = (stance) => {
     const parentNode = store.nodes.find((node) => node.id === id)
     const addPositions = BalloonLayout(store.nodes, store.edges, parentNode, stance, store.setNode)
     
@@ -122,7 +145,7 @@ function RootNode({ id, data }) {
       </div>
       <Card 
         hoverable
-        style={{ width: 200, border: '4px solid #7B6D64', borderTop: '1px solid #7B6D64', borderRadius: '6px' }}
+        style={{ width: 200, border: '4px solid #7B6D64', borderTop: '1px solid #7B6D64', borderRadius: '6px', fontSize: '16px' }}
         title={<div className='rootnode-head'>{data.label}</div>}
       >
         {/* <TextArea autoSize={{ minRows: 2, maxRows: 2 }} value={value} onChange={handleChange}/> */}

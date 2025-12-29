@@ -6,7 +6,7 @@ const HeaderBar = () => {
   return (
     <div className="header">
       <div className="logo">
-      <img src={logo} alt="Logo" />
+        {/* <img src={logo} alt="Logo" /> */}
         <div className="logo-text">DataScout</div>
       </div>
     </div>

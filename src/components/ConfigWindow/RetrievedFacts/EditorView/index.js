@@ -1,6 +1,6 @@
 import React, { Component, useEffect, useState } from 'react';
 import { useReactFlow, getOutgoers } from 'reactflow';
-import { Row, Col, Select, Button } from 'antd';
+import { Row, Col, Select, Button, Input } from 'antd';
 import { v4 as uuidv4 } from 'uuid'
 import { StarOutlined, StarFilled } from '@ant-design/icons';
 import { fact2visRules } from '../../../../tools/fact2visRule';
@@ -11,31 +11,23 @@ import { BalloonLayout } from '../../../Mindmap/Layout/MDSLayout';
 import { Association,Categorization, Difference, Distribution, Extreme, Outlier, Proportion, Rank, Trend, Value } from './Fact'
 import './index.css';
 
-
 import { useStore } from '../../../../store/store';
-import { shallow } from 'zustand/shallow';
 
-const selector = (store) => ({
-  currentNode: store.currentNode,
-  nodes: store.nodes,
-  setNode: store.setNode,
-})
-
+const { TextArea } = Input;
 const { Option } = Select;
 
 const EditorView = (props)=> {
     // const store = useStore(selector, shallow)
     const store = useStore()
-    const { fact, data, schema, factIndex, star, nodeId, setChartName } = props
+    const { fact, data, schema, factIndex, star, nodeId, setChartName, setIsFixed } = props
     const [vis, setVis] = useState(null)
-    // const [type, setType] = useState(fact?.type || 'value')
     const [filterField, setFilterField] = useState('');
     const [filterValue, setFilterValue] = useState('');
     const [subVisible, setSubVisible] = useState(false);
     const [showFocusButton, setShowFocusButton] = useState(true);
     const [subSelectValue, setSubSelectValue] = useState('please select');
+    const [description, setDescription] = useState(fact.description)
     
-    // const [showSubButton, setShowSubButton] = useState(true);
     // const supportedChartTypes = fact2visRules.filter(x => x.fact === fact.type)
 
     const state = {
@@ -82,13 +74,13 @@ const EditorView = (props)=> {
         newFact.chart = getFactChartType(newFact, data)
         newFact.focus = Object.assign([], [])
         // setType(value)
-        updateFact(newFact, factIndex)
+        updateFact(newFact, factIndex, 'typechange')
     }
 
     const handleChartChange = (value) => {
         let newFact = {...fact}
         newFact.chart = value
-        updateFact(newFact, factIndex)
+        updateFact(newFact, factIndex, 'chartchange')
     }
 
     const handleMeasureChange = (value, i) => {
@@ -98,11 +90,11 @@ const EditorView = (props)=> {
         if (value === "COUNT") {
             newList.aggregate = 'count';
         } else {
-            newList.aggregate = 'sum';
+            newList.aggregate = 'none';
         }
         newList.field = value
         newFact.measure[i] = newList
-        updateFact(newFact, factIndex)
+        updateFact(newFact, factIndex, 'measurechange')
     }
 
     const handleAGGChange = (value, i) => {
@@ -112,7 +104,7 @@ const EditorView = (props)=> {
             newList.aggregate = value
             newFact.measure[i] = newList
         }
-        updateFact(newFact, factIndex)
+        updateFact(newFact, factIndex, 'aggchange')
     }
 
     const handleFilterChange = (value) => {
@@ -139,7 +131,7 @@ const EditorView = (props)=> {
         let index = newFact.subspace.indexOf(value)
         newList.splice(index, 1)
         newFact.subspace = newList
-        updateFact(newFact, factIndex)
+        updateFact(newFact, factIndex, 'removefilter')
     }
 
     // subspace新加入一行
@@ -155,7 +147,7 @@ const EditorView = (props)=> {
         setSubVisible(false)
         setFilterField('')
         setSubSelectValue('please select')
-        updateFact(newFact, factIndex)
+        updateFact(newFact, factIndex, 'subok')
     };
 
     const handleSubCancel = (e) => {
@@ -166,7 +158,7 @@ const EditorView = (props)=> {
         let newFact = {...fact}
         newFact.breakdown = [value]
         newFact.focus = Object.assign([], [])
-        updateFact(newFact, factIndex)
+        updateFact(newFact, factIndex, 'breakdownchange')
     }
 
     const onFocusClick = () => {
@@ -205,9 +197,8 @@ const EditorView = (props)=> {
             // newFact.focus = newList
         }
         newFact.focus = newList
-        console.log('focus', newFact.focus, newList)
         setShowFocusButton(true)
-        updateFact(newFact, factIndex)
+        updateFact(newFact, factIndex, 'focuschange')
     }
 
     const removeFocus = (value) => {
@@ -217,7 +208,7 @@ const EditorView = (props)=> {
         newList.splice(index, 1)
         newFact.focus = newList
         setShowFocusButton(true)
-        updateFact(newFact, factIndex)
+        updateFact(newFact, factIndex, 'removefocus')
     }
 
     const onFocusBlur = () => {
@@ -241,7 +232,7 @@ const EditorView = (props)=> {
         setSubVisible(true)
     }
 
-    const updateFact = (newFact, factIndex) => {
+    const updateFact = (newFact, factIndex, type='123') => {
         let factList = store.currentNode.data.facts
         let newFactList = factList.map((fact, index)=>{
             if (index == factIndex) {
@@ -266,24 +257,9 @@ const EditorView = (props)=> {
                 return node
             }
         })
+        console.log('updatefact ', type, newFact)
         store.setNode(newNodes)
         return newFactList
-    }
-
-    const getNewPositionAbsolute = (x, y, width, height, scaleFactor) => {
-        // Step 1: Calculate the center of the rectangle
-        let centerX = x + width / 2;
-        let centerY = y + height / 2;
-    
-        // Step 2: Calculate the new width and height
-        let newWidth = width * scaleFactor;
-        let newHeight = height * scaleFactor;
-    
-        // Step 3: Calculate the new top-left corner coordinates
-        let newX = centerX - newWidth / 2;
-        let newY = centerY - newHeight / 2;
-    
-        return { newX, newY };
     }
     
     const starFact = (()=>{
@@ -298,47 +274,46 @@ const EditorView = (props)=> {
                 return fact
             }
         })
-        const topIndex = newFactList.findIndex(fact => fact.star === true);
+        // const topIndex = newFactList.findIndex(fact => fact.star === true);
 
         
-        const nodeVis = document.getElementById(`query-node-vis-${nodeId}`)
-        // const vissvg = document.getElementsByClassName(chartName)[0]?.childNodes[0]
+        // const nodeVis = document.getElementById(`query-node-vis-${nodeId}`)
+        // // const vissvg = document.getElementsByClassName(chartName)[0]?.childNodes[0]
 
-        const container = document.getElementById(`querynode-${nodeId}`);
-        const oldH = container.offsetHeight
+        // const container = document.getElementById(`querynode-${nodeId}`);
+        // const oldH = container.offsetHeight
 
-        console.log('before star', store.nodes)
-        if (topIndex != -1) {
-            // 节点需要展示当前chart
-            const chartName = newFactList[topIndex].chartName
-            const vissvg = document.getElementsByClassName(chartName)[0]?.childNodes[0]
-            const clonesvg = vissvg.cloneNode(true)
-            const originalWidth = clonesvg.width.baseVal.value;
-            const originalHeight = clonesvg.height.baseVal.value;
+        // if (topIndex != -1) {
+        //     // 节点需要展示当前chart
+        //     const chartName = newFactList[topIndex].chartName
+        //     const vissvg = document.getElementsByClassName(chartName)[0]?.childNodes[0]
+        //     const clonesvg = vissvg.cloneNode(true)
+        //     const originalWidth = clonesvg.width.baseVal.value;
+        //     const originalHeight = clonesvg.height.baseVal.value;
         
-            clonesvg.setAttribute('viewBox', `0 0 ${originalWidth} ${originalHeight}`);
-            clonesvg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+        //     clonesvg.setAttribute('viewBox', `0 0 ${originalWidth} ${originalHeight}`);
+        //     clonesvg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
 
-            clonesvg.setAttribute('width','100%')
-            // clonesvg.setAttribute('height', 'auto')
+        //     clonesvg.setAttribute('width','100%')
+        //     // clonesvg.setAttribute('height', 'auto')
             
-            if (nodeVis.childNodes.length == 0) {
-                nodeVis.appendChild(clonesvg)
-                const borderColor =  nodeVis.style.borderColor
-                nodeVis.style.border = `1px solid ${borderColor}`
-            } else {
-                nodeVis.innerHTML = ''
-                nodeVis.appendChild(clonesvg)
-            }
-        } else if (topIndex == -1 && nodeVis.childNodes.length > 0) {
-            // 当没有star的fact时，需要清除
-            nodeVis.innerHTML = ''
-            nodeVis.style.border = 'none'
-        }
+        //     if (nodeVis.childNodes.length == 0) {
+        //         nodeVis.appendChild(clonesvg)
+        //         const borderColor =  nodeVis.style.borderColor
+        //         nodeVis.style.border = `1px solid ${borderColor}`
+        //     } else {
+        //         nodeVis.innerHTML = ''
+        //         nodeVis.appendChild(clonesvg)
+        //     }
+        // } else if (topIndex == -1 && nodeVis.childNodes.length > 0) {
+        //     // 当没有star的fact时，需要清除
+        //     nodeVis.innerHTML = ''
+        //     nodeVis.style.border = 'none'
+        // }
 
-        const newContainer = document.getElementById(`querynode-${nodeId}`);
-        const newH = newContainer.offsetHeight
-        const newPosAbsY = store.currentNode.positionAbsolute.y- (newH-oldH)/2*(store.currentNode.scale-1)
+        // const newContainer = document.getElementById(`querynode-${nodeId}`);
+        // const newH = newContainer.offsetHeight
+        // const newPosAbsY = store.currentNode.positionAbsolute.y- (newH-oldH)/2*(store.currentNode.scale-1)
         let newNodes = store.nodes.map((node)=>{
             if (node.id == store.currentNode.id) {
                 return {
@@ -347,27 +322,34 @@ const EditorView = (props)=> {
                         ...node.data,
                         facts: newFactList
                     },
-                    positionAbsolute: {
-                        ...node.positionAbsolute,
-                        y: newPosAbsY
-                    },
-                    showVis: topIndex==-1? false : true
+                    // positionAbsolute: {
+                    //     ...node.positionAbsolute,
+                    //     y: newPosAbsY
+                    // },
+                    // showVis: topIndex==-1? false : true
                 }
             } else {
                 return node
             }
         })
         store.setNode(newNodes)
-        const parentNode = store.nodes.filter(item => item.id == store.currentNode.parentNode)[0]
-        const stance = topIndex>=0 ? newFactList[topIndex].stance.label : newFactList[0].stance.label
-        BalloonLayout(newNodes, store.edges, parentNode, stance, store.setNode, 0, false)
+        // const parentNode = store.nodes.filter(item => item.id == store.currentNode.parentNode)[0]
+        // const stance = topIndex>=0 ? newFactList[topIndex].stance.label : newFactList[0].stance.label
+        // BalloonLayout(newNodes, store.edges, parentNode, stance, store.setNode, 0, false)
     })
 
+    const handleDescriptionChange = (e) => {
+        let newDescription = e.target.value
+        fact.description = newDescription
+        setDescription(newDescription)
+    }
+
     useEffect(()=>{
+        console.log('fact', fact)
         if (isValid(fact)) {
-            // const newvis = fact2vis(uuidv4(), fact, data, factIndex, 220, 220, setChartName, updateFact);
-            const newvis = fact2chart(uuidv4(), fact, data, 220, 220, setChartName);
+            const newvis = fact2chart(uuidv4(), fact, data, schema, 220, 220, setChartName);
             setVis(newvis)
+            setDescription(fact.description)
             console.log('vis', fact, newvis)
         } 
     }, [fact])
@@ -377,6 +359,7 @@ const EditorView = (props)=> {
         const filteredData = datafilter(data, fact.subspace);
         const xField = filteredData.map(item => item[fact.breakdown[0]]);
         const uniqueXFiled = new Set(xField);
+        console.log('filtereddata', filteredData, xField, uniqueXFiled)
     
         if (uniqueXFiled.size === filteredData.length) {
             fact.measure.forEach(item => {
@@ -452,7 +435,11 @@ const EditorView = (props)=> {
                 <Button className='star-btn' onClick={starFact} icon={star ? <StarFilled style={{color: 'rgba(254, 189, 67, 1)'}} /> : <StarOutlined />}/>
                 {vis}
             </div>
-            <div id="select-panel" style={{ width: "100%", overflow: "auto", }}>
+            <div className='chart-caption' onMouseLeave={()=>{setIsFixed(false)}} onMouseEnter={()=>{setIsFixed(true)}}>
+                {/* {fact.description} */}
+                <TextArea style={{height: '68px', backgroundColor: 'rgba(0,0,0,0)', fontSize: '16px'}} value={description} onChange={handleDescriptionChange} />
+            </div>
+            <div id="select-panel" style={{ width: "100%", overflow: "auto"}}>
                 <Row className="shelf">
                     <Col span={8} className="channelName">Type</Col>
                     <Col span={16}>

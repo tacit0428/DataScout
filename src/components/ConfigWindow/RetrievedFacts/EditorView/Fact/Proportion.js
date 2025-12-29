@@ -8,18 +8,8 @@ const { Option } = Select;
 
 export default class Proportion extends Component {
 
-    render() {
-        let { handleChartChange, getFieldValue, isDisabled, handleMeasureChange, handleAGGChange, handleFilterChange, onRadioChange, removeFilter, handleSubOk, handleSubCancel, handleBreakdownChange, handleFocusChange, showModal, updateFact } = this.props;
+    componentDidMount() {
         let fact = this.props.fact;
-        let schema = this.props.schema;
-        let measureList = schema.filter(key => key['type'] === "numerical")
-        measureList.push({ field: "COUNT", type: "numerical" })
-        const aggregationType = [],
-            subspaceList = schema.filter(key => key['type'] !== "numerical"),//只能categorical, temporal
-            breakdownList = schema.filter(key => key['type'] !== "numerical"),//只能categorical, temporal
-            subValueList = getFieldValue(this.props.data, this.props.filterField),
-            breakdownValueList = getFieldValue(this.props.data, fact.breakdown),
-            supportedChartTypes = fact2visRules.filter(x => x.fact === fact.type.toLowerCase());
         if (fact.measure.length && fact.breakdown.length) {
             // aggregation
             let encoding = {}
@@ -35,22 +25,36 @@ export default class Proportion extends Component {
             let max = aggregatedRows.reduce((a, b) => (a[measureField] > b[measureField]) ? a : b)
 
             /***** 设默认为max，并且更新到fact中 *****/
-            // let newFact = {...this.props.fact}
-            // if (!newFact.focus.length) {
-            //     newFact.focus = [{
-            //         field: fact.breakdown[0],
-            //         value: max[fact.breakdown[0]],
-            //     }]
-            //     updateFact(newFact, this.props.factIndex)
-            // }
-
-            if (!fact.focus.length) {
-                fact.focus = [{
+            let newFact = {...this.props.fact}
+            if (!newFact.focus.length) {
+                newFact.focus = [{
                     field: fact.breakdown[0],
                     value: max[fact.breakdown[0]],
                 }]
+                this.props.updateFact(newFact, this.props.factIndex, 'propotion')
             }
+            // if (!fact.focus.length) {
+            //     fact.focus = [{
+            //         field: fact.breakdown[0],
+            //         value: max[fact.breakdown[0]],
+            //     }]
+            // }
+
         }
+    }
+
+    render() {
+        let { handleChartChange, getFieldValue, isDisabled, handleMeasureChange, handleAGGChange, handleFilterChange, onRadioChange, removeFilter, handleSubOk, handleSubCancel, handleBreakdownChange, handleFocusChange, showModal, updateFact } = this.props;
+        let fact = this.props.fact;
+        let schema = this.props.schema;
+        let measureList = schema.filter(key => key['type'] === "numerical")
+        measureList.push({ field: "COUNT", type: "numerical" })
+        const aggregationType = [],
+            subspaceList = schema.filter(key => key['type'] !== "numerical"),//只能categorical, temporal
+            breakdownList = schema.filter(key => key['type'] !== "numerical"),//只能categorical, temporal
+            subValueList = getFieldValue(this.props.data, this.props.filterField),
+            breakdownValueList = getFieldValue(this.props.data, fact.breakdown),
+            supportedChartTypes = fact2visRules.filter(x => x.fact === fact.type.toLowerCase());
 
         let modalPosition;
         if (document.getElementById('add-subspace-propotion')) {

@@ -5,11 +5,38 @@ import { fact2visRules } from '../../../../../tools/fact2visRule';
 const { Option } = Select;
 
 export default class Difference extends Component {
+    constructor(props) {
+        super(props)
+        this.focus1 = ''
+        this.focus2 = ''
+    }
+
+    componentDidMount() {
+        let fact = this.props.fact
+        const breakdownValueList = this.props.getFieldValue(this.props.data, fact.breakdown)
+        let newFact = {...fact}
+        if (fact.focus.length != 2) {
+            let value1 = (fact.focus.length>0 && breakdownValueList.includes(fact.focus[0].value))? fact.focus[0].value : breakdownValueList[0]
+            let value2 = (fact.focus.length>1 && breakdownValueList.includes(fact.focus[1].value))? fact.focus[1].value : breakdownValueList[1]
+            newFact.focus = [
+                {
+                    field: fact.breakdown[0],
+                    value: value1,
+                },
+                {
+                    field: fact.breakdown[0],
+                    value: value2,
+                }
+            ]
+            this.focus1 = newFact.focus[0].value
+            this.focus2 = newFact.focus[1].value
+            this.props.updateFact(newFact, this.props.factIndex, 'difference')
+        } 
+    }
 
     render() {
         let { handleChartChange, getFieldValue, isDisabled, handleMeasureChange, handleAGGChange, handleFilterChange, onRadioChange, removeFilter, handleSubOk, handleSubCancel, handleBreakdownChange, handleFocusChange, showModal, updateFact } = this.props;
         let fact = this.props.fact;
-        let factIndex = this.props.factIndex;
         let schema = this.props.schema;
         let measureList = schema.filter(key => key['type'] === "numerical")
         measureList.push({ field: "COUNT", type: "numerical" })
@@ -21,19 +48,19 @@ export default class Difference extends Component {
             supportedChartTypes = fact2visRules.filter(x => x.fact === fact.type.toLowerCase())
 
         /***** 设默认为第1、2条，并且更新到fact中 *****/
-        let newFact = this.props.fact
-        if (!fact.focus.length) {
-            newFact.focus = [{
-                field: fact.breakdown[0],
-                value: breakdownValueList[0],
-            },
-            {
-                field: fact.breakdown[0],
-                value: breakdownValueList[1],
-            }
-            ]
-            // updateFact(newFact, this.props.factIndex)
-        }
+        // let newFact = this.props.fact
+        // if (!fact.focus.length) {
+        //     newFact.focus = [{
+        //         field: fact.breakdown[0],
+        //         value: breakdownValueList[0],
+        //     },
+        //     {
+        //         field: fact.breakdown[0],
+        //         value: breakdownValueList[1],
+        //     }
+        //     ]
+        //     // updateFact(newFact, this.props.factIndex)
+        // }
 
 
         let modalPosition;
@@ -53,6 +80,13 @@ export default class Difference extends Component {
             measure = fact.measure
         }
 
+        this.focus1 = fact.focus.length>0 ? fact.focus[0].value : ''
+        this.focus2 = fact.focus.length>1 ? fact.focus[1].value : ''
+        // if (fact.focus.length >= 2) {
+        //     this.focus1 = fact.focus[0].value
+        //     this.focus2 = fact.focus[1].value
+        // } 
+
         return (
             <div className="config-panel">
                 <Row key={'chart'} className="shelf">
@@ -66,7 +100,7 @@ export default class Difference extends Component {
 
                 {measure.map((key, i) => <Row className={i === 0 ? 'shelf' : ''} key={'measure' + i}>
                     <Col span={8} className={i === 0 ? 'channelName' : ''}>{i === 0 ? "Measure" : ''}</Col>
-                    <Col span={16} style={{ border: i === 0 ? 'none' : '1px solid black' }}>
+                    <Col span={16}>
                         <Row style={{marginBottom: '0', border: '0'}}>
                         <Col span={14}>
                             <Select className="select-box" id={"select-measure" + i} defaultValue={key.field} value={key.field} size='small' onChange={(value) => handleMeasureChange(value, i)}>
@@ -157,7 +191,7 @@ export default class Difference extends Component {
                 <Row className="shelf">
                     <Col span={8} className="channelName">Focus</Col>
                     <Col span={16}>
-                        <Select className="select-box" defaultValue={fact.focus[0].value} value={fact.focus[0].value} size='small' onChange={(value) => handleFocusChange(value, 0)}>
+                        <Select className="select-box" defaultValue={this.focus1} value={this.focus1} size='small' onChange={(value) => handleFocusChange(value, 0)}>
                             {breakdownValueList.map((key) => <Option key={key} value={key} disabled={isDisabled(fact.focus, 'value', key)}>{key}</Option>)}
                         </Select>
                     </Col>
@@ -166,7 +200,7 @@ export default class Difference extends Component {
                 <Row>
                     <Col span={8}></Col>
                     <Col span={16}>
-                        <Select className="select-box" defaultValue={fact.focus[1].value} value={fact.focus[1].value} size='small' onChange={(value) => handleFocusChange(value, 1)}>
+                        <Select className="select-box" defaultValue={this.focus2} value={this.focus2} size='small' onChange={(value) => handleFocusChange(value, 1)}>
                             {breakdownValueList.map((key) => <Option key={key} value={key} disabled={isDisabled(fact.focus, 'value', key)}>{key}</Option>)}
                         </Select>
                     </Col>

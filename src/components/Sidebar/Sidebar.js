@@ -1,16 +1,17 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Button, Dropdown, Menu, Input } from 'antd';
+import { Button, Dropdown, Menu, Input, message } from 'antd';
 import ReactQuill, { Quill } from 'react-quill';
 import ImageResize from 'quill-image-resize-module-react';
 import { saveAs } from 'file-saver';
 import { ReactFlowProvider, useReactFlow } from 'reactflow';
-import { useNavigate } from 'react-router-dom';
-import { v4 as uuidv4 } from 'uuid'
 import 'react-quill/dist/quill.snow.css';
 import './Sidebar.css';
 import jsPDF from 'jspdf';
 import htmlDocx from 'html-docx-js/dist/html-docx';
 import html2canvas from 'html2canvas';
+import facts from '../../tools/demo';
+import _ from 'lodash'
+import { nanoid } from 'nanoid';
 
 import saveIcon from '../../assets/save_icon.svg';
 import exportIcon from '../../assets/export_icon.svg';
@@ -19,18 +20,9 @@ import planeIcon from '../../assets/plane_icon.svg';
 
 import * as api from '../../axios/api'
 import { BalloonLayout } from '../Mindmap/Layout/MDSLayout';
+import { extract_Res, calcStanceAndRel, getColor } from '../../tools/helper';
 
 import { useStore } from '../../store/store';
-import { shallow } from 'zustand/shallow';
-
-const selector = (store) => ({
-  addRootNode: store.addRootNode,
-  addChildNode: store.addChildNode,
-  addChildNodeForRoot: store.addChildNodeForRoot,
-  setEditorRef: store.setEditorRef,
-  setEdge: store.setEdge,
-  setNode: store.setNode,
-})
 
 Quill.register('modules/imageResize', ImageResize);
 window.Quill = Quill
@@ -65,12 +57,12 @@ const Sidebar = ({ visible, toggleDrawer }) => {
   const [title, setTitle] = useState('');
   const [selectionRect, setSelectionRect] = useState(null);
   const [selectText, setSelectText] = useState('')
+  const [filename, setFilename] = useState('')
   const editorRef = useRef(null);
   const reactQuillRef = useRef(null)
-  // const store = useStore(selector, shallow);
   const store = useStore()
   const { fitView } = useReactFlow();
-  // const uuid = uuidv4()
+  const [messageApi, contextHolder] = message.useMessage();
 
   const updateSelection = () => {
     const selection = window.getSelection();
@@ -148,7 +140,8 @@ const Sidebar = ({ visible, toggleDrawer }) => {
   const exportToNewPage = () => {
     localStorage.setItem(`newsTitle-${store.pageId}`, title);
     localStorage.setItem(`newsContent-${store.pageId}`, editorContent);
-    window.open(`/#/news?id=${store.pageId}`, '_blank');
+    // window.open(`/#/news/${store.pageId}`, '_blank');
+    window.open(`/DataScout/#/news?id=${store.pageId}`, '_blank');
   }
 
   const menu = (
@@ -165,61 +158,89 @@ const Sidebar = ({ visible, toggleDrawer }) => {
     </Menu>
   );
   
-  // const addQuery = (nodes, edges, stance) => {
-  //   // setIsDecompose(true)
-  //   api.decomposeQuery(selectText, 0, stance).then(response=>{
-  //     const parentNode = nodes[0]
-  //     const response_data = response.data.data
-  //     const { directionList, queryList } = response_data
-  //     console.log('root addnode', directionList, queryList)
-  //     // const newstance = stance == 'supportive' ? 'support' : 'oppose'
-  //     const addPositions = BalloonLayout(nodes, edges, parentNode, stance, store.setNode, queryList.length)
-  //     const res = store.addChildNode(parentNode, queryList, directionList, stance, addPositions)
-  //     console.log('res1', res)
-  //     return res
-  //     // setIsDecompose(false)
-  //   }).catch(error => {
-  //     console.error(error)
-  //     return {nodes: nodes, edges: []}
-  //     // setIsDecompose(false)
-  //   })
-  // } 
-  // }
-
   const addQuery = async (nodes, edges) => {
     try {
-        const response = await api.decomposeQuery(selectText, 0, 'support');
-        const response_data = response.data.data;
-        const { directionList, queryList } = response_data;
-
-        const response_oppose = await api.decomposeQuery(selectText, 0, 'oppose');
-        const response_data_oppose = response_oppose.data.data;
-        const { directionList: directionList_oppose, queryList: queryList_oppose } = response_data_oppose;
-
+        let newNodes = [], newNodes_oppose = []
         const parentNode = nodes[0];
-        const res = BalloonLayout(nodes, edges, parentNode, 'support', store.setNode, queryList.length);
-        const res_oppose = BalloonLayout(nodes, edges, parentNode, 'oppose', store.setNode, queryList_oppose.length);
 
-        const newQueryList = queryList.concat(queryList_oppose)
-        const newDirectionList = directionList.concat(directionList_oppose)
-        const newAddPositions = res.positions.concat(res_oppose.positions)
+        const [response1, response2] = await Promise.all([
+          // api.decomposeAndRetrieveTest(selectText, selectText, 'support'),
+          // api.decomposeAndRetrieveTest(selectText, selectText, 'oppose')
+          api.decomposeAndRetrieve(selectText, selectText, 'support'),
+          api.decomposeAndRetrieve(selectText, selectText, 'oppose')
+        ]);
+        console.log('res', response1, response2)
 
-        store.addChildNodeForRoot(parentNode, newQueryList, newDirectionList, newAddPositions, queryList.length);
+        const retrieveList = extract_Res(response1)
+   
+        let newRetrieveList = retrieveList.map(obj => {
+          const facts = obj.facts
+          const res = calcStanceAndRel(facts, 'support')
+          if (res.stance?.label == 'support') {
+            newNodes.push({ ...obj, relevance: res.relevance, stance: res.stance, scale: res.scale })
+          } else {
+            newNodes_oppose.push({ ...obj, relevance: res.relevance, stance: res.stance, scale: res.scale })
+          }
+          return { ...obj, relevance: res.relevance, stance: res.stance, scale: res.scale };
+        });
+
+        console.log('retrieve support', newRetrieveList)
+        
+        const retrieveList_oppose = extract_Res(response2)
+
+        let newRetrieveList_oppose = retrieveList_oppose.map(obj => {
+          const facts = obj.facts
+          const res = calcStanceAndRel(facts, 'oppose')
+          if (res.stance?.label == 'support') {
+            newNodes.push({ ...obj, relevance: res.relevance, stance: res.stance, scale: res.scale })
+          } else {
+            newNodes_oppose.push({ ...obj, relevance: res.relevance, stance: res.stance, scale: res.scale })
+          }
+          return { ...obj, relevance: res.relevance, stance: res.stance, scale: res.scale };
+        });
+        
+        console.log('retrieve oppose', newRetrieveList_oppose)
+
+        // const res = BalloonLayout(nodes, edges, parentNode, 'support', store.setNode, newRetrieveList.length);
+        // const res_oppose = BalloonLayout(nodes, edges, parentNode, 'oppose', store.setNode, newRetrieveList_oppose.length);
+
+        // const addPositionsAll = res.positions.concat(res_oppose.positions)
+        // const retrieveListAll = newRetrieveList.concat(newRetrieveList_oppose)
+        // store.addChildNodeForRootAll(parentNode, retrieveListAll, addPositionsAll);
+        
+        const res = BalloonLayout(nodes, edges, parentNode, 'support', store.setNode, newNodes.length);
+        const res_oppose = BalloonLayout(nodes, edges, parentNode, 'oppose', store.setNode, newNodes_oppose.length);
+
+        const addPositionsAll = res.positions.concat(res_oppose.positions)
+        const nodesAll = newNodes.concat(newNodes_oppose)
+
+        store.addChildNodeForRootAll(parentNode, nodesAll, addPositionsAll);
     } catch (error) {
         console.error(error);
     }
 };
-  const addQuery1 = (nodes, edges, stance) => {
+
+  const addQueryDemo = (nodes, edges, stance) => {
     const parentNode = nodes[0]
-    const addPositions = BalloonLayout(nodes, edges, parentNode, stance, store.setNode)
-    
+    const res = BalloonLayout(nodes, edges, parentNode, 'support', store.setNode)
+  
     const queryList = ["What is China's recent GDP growth rate",
     "How are China's major industries growing",
     "How are China's consumption and investment levels changing"]
     const queryThemeList = ['economy', 'operating and maintenance costs', 'supply side']
-    // const newstance = stance == 'supportive' ? 'support' : 'oppose'
-    const res = store.addChildNode(parentNode, queryList, queryThemeList, stance, addPositions)
-    return res
+    let retrieveListAll = []
+    for (let i=0; i<queryList.length; i++) {
+      let recommend = i==0 ? true : false
+      retrieveListAll.push({
+        query: queryList[i],
+        queryTheme: queryThemeList[i],
+        stance: {label: 'support', score: 0.8},
+        facts: _.cloneDeep(facts),
+        recommend: recommend
+      })
+    }
+    // const res = store.addChildNode(parentNode, queryList, queryThemeList, stance, addPositions)
+    store.addChildNodeForRootAll(parentNode, retrieveListAll, res.positions);
   }
 
   const onAddStatement = async ()=>{
@@ -235,19 +256,69 @@ const Sidebar = ({ visible, toggleDrawer }) => {
     // 3. 请求生成支持和否定的query
     store.setIsRootDecompose(true)
     await addQuery(nodes, [])
+    // addQueryDemo(nodes, store.edges, [])
     store.setIsRootDecompose(false)
+  }
+
+  const onSave = () => {
+    const nodes = store.nodes
+    const edges = store.edges
+    const rootNode = nodes[0]
+    const statement = rootNode.data.query, rootId = rootNode.id
+    const userid = nanoid()
+    api.storeFacts(statement, nodes, edges, rootId).then(response=>{
+      messageApi.open({
+        type: 'success',
+        content: 'Save Successful',
+      });
+      console.log('save success')
+    }).catch(error => {
+      console.error(error)
+    })
+  }
+
+  const onLoadAllNodes = () => {
+    api.loadFacts(filename).then(response=>{
+      const nodes = response.data.nodes
+      const edges = response.data.edges
+      console.log('load success', response, nodes, edges)
+      const newEdges = edges.map(edge=>{
+        const targetId = edge.target
+        const node = nodes.filter((node)=>node.id==targetId)[0]
+        if (node) {
+          const color = getColor(node.data.stance)
+          return {
+            ...edge,
+            style: {
+              ...edge.style,
+              stroke: `hsla(${color.h}, ${color.s}%, ${color.l}%, 1)`
+            }
+          }
+        } else {
+          return edge
+        }
+      })
+
+      store.setNode(nodes)
+      store.setEdge(newEdges)
+
+
+    }).catch(error => {
+      console.error(error)
+    })
   }
 
   useEffect(() => {
     if (store.isRootDecompose) {
       setTimeout(() => {
         fitView();
-      }, 200);
+      }, 400);
     }
   }, [store.nodes, store.isRootDecompose]);
 
   return (
     <div className={`sidebar ${visible ? 'open' : ''}`}>
+      {contextHolder}
       <Button className="toggle-btn" onClick={toggleDrawer}>
         {visible ? '<' : '>'}
       </Button>
@@ -255,7 +326,7 @@ const Sidebar = ({ visible, toggleDrawer }) => {
         <div className="editor-header">
           <Input 
             className="input"
-            placeholder=""
+            placeholder="Please input the title of the story"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             prefix={<Button className="edit-btn" style={{ border: 'none', background: 'transparent' }}>
@@ -263,7 +334,7 @@ const Sidebar = ({ visible, toggleDrawer }) => {
             </Button>}
           />
           <Button className="icon-btn">
-            <img src={saveIcon} alt="save" className="icon" />
+            <img src={saveIcon} alt="save" className="icon" onClick={onSave}/>
           </Button>
           <Dropdown overlay={menu} placement="bottomRight">
             <Button className="icon-btn">
@@ -271,6 +342,10 @@ const Sidebar = ({ visible, toggleDrawer }) => {
             </Button>
           </Dropdown>
         </div>
+        {/* <div style={{display: 'flex', flexDirection: 'row'}}>
+          <Input value={filename} onChange={(e) => setFilename(e.target.value)} />
+          <Button onClick={onLoadAllNodes}>Load</Button>
+        </div> */}
         <div className="editor" ref={editorRef}>
           <ReactQuill 
             value={editorContent}
@@ -290,13 +365,13 @@ const Sidebar = ({ visible, toggleDrawer }) => {
                 alignItems: 'center', 
                 justifyContent: 'center', 
                 pointerEvents: 'auto',
-                width: '40px', 
-                height: '40px', 
+                width: '60px', 
+                height: '60px', 
                 borderRadius: '20%', 
               }}
               onClick={onAddStatement}
             >
-              <img src={planeIcon} alt="plane" style={{ width: '18px', height: '18px' }} />
+              <img src={planeIcon} alt="plane" style={{ width: '28px', height: '28px' }} />
             </Button>
           )}
         </div>

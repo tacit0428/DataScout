@@ -12,10 +12,25 @@ export default class Trend extends Component {
         let schema = this.props.schema;
         let breakdownList = schema.filter(key => key['type'] === "temporal")
         const breakdownFieldList = breakdownList.map((d) => d.field)
+        let newFact = Object.assign(this.props.fact), changeBreakdown = false, changeFocus = false
         if (fact.breakdown.length && breakdownList.length && breakdownFieldList.indexOf(fact.breakdown[0]) === -1) {
-            let newFact = Object.assign(this.props.fact)
             newFact.breakdown[0] = breakdownList[0].field
-            this.props.updateFact(newFact, factIndex)
+            changeBreakdown = true
+            // this.props.updateFact(newFact, factIndex)
+        }
+        let focus = []
+        if (fact.focus && fact.focus.length) {
+            for (const item of fact.focus) {
+                if (item.field == fact.breakdown[0]) {
+                    focus.push(item)
+                } else {
+                    changeFocus = true
+                }
+            }
+            newFact.focus = focus 
+        }
+        if (changeBreakdown || changeFocus){
+            this.props.updateFact(newFact, factIndex, 'trend')
         }
     }
 
@@ -51,15 +66,15 @@ export default class Trend extends Component {
             measure = fact.measure.slice(0,1) // measure只需要一个
         }
 
-        let focus = []
-        if (fact.focus && fact.focus.length) {
-            for (const item of fact.focus) {
-                if (item.field == fact.breakdown[0]) {
-                    focus.push(item)
-                }
-            }
-        }
-        fact.foucs = focus
+        // let focus = []
+        // if (fact.focus && fact.focus.length) {
+        //     for (const item of fact.focus) {
+        //         if (item.field == fact.breakdown[0]) {
+        //             focus.push(item)
+        //         }
+        //     }
+        // }
+        // fact.focus = focus
 
         const focusButton = <Row className={fact.focus.length === 0 ? 'shelf' : ''}>
             <Col span={8} className={fact.focus.length === 0 ? 'channelName' : ''}>{fact.focus.length === 0 ? "Focus" : ''}</Col>

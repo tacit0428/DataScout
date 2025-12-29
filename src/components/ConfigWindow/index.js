@@ -15,19 +15,7 @@ import RetrievedFacts from "./RetrievedFacts";
 import './index.css'
 
 import { useStore } from '../../store/store';
-import { shallow } from 'zustand/shallow';
 
-const selector = (store) => ({
-  nodes: store.nodes,
-  edges: store.edges,
-  onNodesChange: store.onNodesChange,
-  onEdgesChange: store.onEdgesChange,
-  addChildNode: store.addChildNode,
-  addRootNode: store.addRootNode,
-  addEdge: store.addEdge,
-  currentNode: store.currentNode,
-  editorRef: store.editorRef
-})
 
 function ConfigWindow(props) {
     const store = useStore()
@@ -81,7 +69,7 @@ function ConfigWindow(props) {
 
     const PanelHeader = ({title}) => {
         return (
-            <div className="panel-header">
+            <div className="panel-header" style={{display: 'flex'}}>
                 <EditFilled style={{color: 'rgba(133, 140, 144, 1)'}}/>
                 <div style={{marginLeft: '10px'}}>{title}</div>
             </div>

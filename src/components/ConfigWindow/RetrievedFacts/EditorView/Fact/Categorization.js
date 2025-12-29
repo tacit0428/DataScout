@@ -67,7 +67,7 @@ export default class Categorization extends Component {
 
                 {fact.subspace.map((key, i) => <Row className={i === 0 ? 'shelf' : ''} key={key.field}>
                     <Col span={8} className={i === 0 ? 'channelName' : ''}>{i === 0 ? "Subspace" : ''}</Col>
-                    <Col span={16} style={{ border: i === 0 ? 'none' : '1px solid black' }}>
+                    <Col span={16} >
                         {/* <Col span={2}></Col> */}
                         <Row style={{marginBottom: '0', border: '0'}}>
                         <Col span={20} title={`${key.field} = ${key.value}`} style={{ overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis', paddingLeft: '7px', display: 'flex', alignItems: 'center' }}>{`${key.field} = ${key.value}`}</Col>

@@ -1,5 +1,5 @@
 .news-container {
-    padding: 15% 10%;
+    padding: 10% 10%;
 
     .news-title {
         width: 100%;
@@ -40,5 +40,8 @@ img {
     }
     p {
         line-height: 23px;
+    }
+    .news-container {
+        padding: 15% 10%;
     }
 }

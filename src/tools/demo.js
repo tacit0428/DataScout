@@ -26,12 +26,15 @@ const facts = [
             name: 'economy',
             data: {
                 rows: [
-                    {'Country Name': 'China', 'Year': 2023, 'GDP': 100, 'CPI': 10},
-                    {'Country Name': 'China', 'Year': 2022, 'GDP': 80, 'CPI': 8},
-                    {'Country Name': 'China', 'Year': 2021, 'GDP': 60, 'CPI': 6},
-                    {'Country Name': 'USA', 'Year': 2023, 'GDP': 200, 'CPI': 20},
-                    {'Country Name': 'USA', 'Year': 2022, 'GDP': 180, 'CPI': 18},
-                    {'Country Name': 'USA', 'Year': 2021, 'GDP': 160, 'CPI': 16},
+                    {'Country Name': 'China', 'Year': 2023, 'GDP': 13000, 'CPI': 10},
+                    {'Country Name': 'China', 'Year': 2022, 'GDP': 8000, 'CPI': 8},
+                    {'Country Name': 'China', 'Year': 2021, 'GDP': 6000, 'CPI': 6},
+                    {'Country Name': 'China', 'Year': 2020, 'GDP': 100, 'CPI': 10},
+                    {'Country Name': 'China', 'Year': 2019, 'GDP': 8000, 'CPI': 8},
+                    {'Country Name': 'China', 'Year': 2018, 'GDP': 6000, 'CPI': 6},
+                    {'Country Name': 'USA', 'Year': 2023, 'GDP': 200000, 'CPI': 20},
+                    {'Country Name': 'USA', 'Year': 2022, 'GDP': 180000, 'CPI': 18},
+                    {'Country Name': 'USA', 'Year': 2021, 'GDP': 160000, 'CPI': 16},
                 ],
                 columns: ['Country Name', 'Year', 'GDP', 'CPI'],
                 schema:  [

@@ -2,8 +2,8 @@
     display: flex;
     justify-content: center;
     font-size: 11px;
-    height: 18px;
-    border-radius: 6px 6px 0px 0px;
+    height: 16px;
+    border-radius: 4px 4px 0px 0px;
     color: white
 } 
 
@@ -50,13 +50,41 @@
         opacity: 0;
     }
 
-    .truncated {
+    .query-node-vis-container {
+        display: flex;
+        justify-content: center;
+        width: 100%;
+        height: 112px;
+        margin-top: 6px;
+        border-radius: 4px;
+        border-width: 0.7px;
+        border-style: solid;
+        overflow: hidden;
+    }
+
+    .cardContent {
         display: -webkit-box;
         -webkit-box-orient: vertical;
-        -webkit-line-clamp: 3; 
+        -webkit-line-clamp: 4; 
         overflow: hidden;
         text-overflow: ellipsis;
-        margin-top: 10px;
+        margin-top: 3px;
+        /* height: 72px; */
+        font-size: 16px; 
+        line-height: 1.3; 
+    }
+
+    .addNewsBtn {
+        position: absolute;
+        bottom: -4px;
+        right: -4px;
+    }
+
+    .addNewsBtn-opacity {
+        position: absolute;
+        bottom: -5px;
+        right: -5px;
+        opacity: 0;
     }
 }
 

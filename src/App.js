@@ -44,10 +44,10 @@ const App = () => {
 
 
   return (
-      <Router basename="/DataScout">
+      <Router>
           <Routes>
               <Route path="/home" element={<HomePage />} />
-              <Route path="/news/*" element={<PublishPage />} />
+              <Route path="/news" element={<PublishPage />} />
           </Routes>
       </Router>
   );

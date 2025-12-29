@@ -9,7 +9,6 @@ const offset = 20; // To show whole chart
 const draw = (props) => {
     const chartName = 'vis-barchart-'+props.uuid
     props.setChartName(chartName)
-    console.log('vertical bar', props.spec.style)
 
     d3.select('.vis-barchart-' + props.uuid + ' > *').remove();
     let a = '.vis-barchart-' + props.uuid;
@@ -32,11 +31,10 @@ const draw = (props) => {
 
     // filter data when difference
     if ('difference' in style) {
-        let data1 = data.filter((d) => (d[encoding.x.field].toString() === style['difference'][0]))
-        let data2 = data.filter((d) => (d[encoding.x.field].toString() === style['difference'][1]))
+        let data1 = data.filter((d) => (d[encoding.x.field].toString() === style['difference'][0].toString()))
+        let data2 = data.filter((d) => (d[encoding.x.field].toString() === style['difference'][1].toString()))
         let differenceData = [data1[0], data2[0]]
         data = differenceData
-        console.log('difference', data)
     }
 
     // console.log(getWidth(d3.map(data, function(d){return d[encoding.x.field]}).keys().sort(function(a, b) {
@@ -45,7 +43,7 @@ const draw = (props) => {
     const height_label = _.min([0.8 * Math.round(getWidth(d3.map(data, function (d) { return d[encoding.x.field] }).keys().sort(function (a, b) {
         return b.length - a.length;
     })[0])) + 10, 0.4 * props.height])
-    let margin = { top: 10, right: 10, bottom: height_label, left: 60 };
+    let margin = { top: 10, right: 10, bottom: height_label, left: 50 };
     if ('focus' in style) {
         margin = { top: 35, right: 22, bottom: 20, left: 22 };
     }
@@ -189,11 +187,14 @@ const draw = (props) => {
     }
 
     let x_domain_length = x.domain().length;
-    let numTicks = Math.min(x_domain_length, 8);
+    let tickValues;
+    if (x_domain_length > 8 && encoding.x.type == 'temporal') {
+        let step = Math.ceil(x_domain_length / 8);
+        tickValues = x.domain().filter((d, i) => i % step === 0);
+    } else {
+        tickValues = x.domain();
+    }
 
-    let tickValues = x.domain().filter(function(d, i) { 
-        return i % (numTicks-1) === 0; 
-    });
     
 
     // Axis
@@ -211,14 +212,28 @@ const draw = (props) => {
         svg.append("g")
             .attr("class", "y_axis")
             .call(d3.axisLeft(y).ticks(5).tickFormat(function (d) {
-                if ((d / 1000000000) >= 1) {
-                    d = d / 1000000000 + "B"
-                } else if ((d / 1000000) >= 1) {
-                    d = d / 1000000 + "M";
-                } else if ((d / 1000) >= 1) {
-                    d = d / 1000 + "K";
+                let absD = Math.abs(d);
+                let suffix = '';
+
+                if ((absD / 1000000000000) >= 1) { // 万亿
+                    absD = (absD / 1000000000000);
+                    suffix = "T";
+                } else if ((absD / 1000000000) >= 1) { // 十亿
+                    absD = (absD / 1000000000);
+                    suffix = "B";
+                } else if ((absD / 1000000) >= 1) { // 百万
+                    absD = (absD / 1000000);
+                    suffix = "M";
+                } else if ((absD / 1000) >= 1) { // 千
+                    absD = (absD / 1000);
+                    suffix = "K";
                 }
-                return d;
+
+                // Check if there are decimal places and they exceed two decimal places
+                absD = absD % 1 === 0 ? absD : absD.toFixed(2);
+
+                let formatted = absD + suffix;
+                return d < 0 ? "-" + formatted : formatted;
             }));
     }
     // Style
@@ -325,8 +340,8 @@ const draw = (props) => {
             });
 
         // draw trend line
-        let barH1 = y(data.filter(d => d[encoding.x.field].toString() === style['difference'][0])[0][encoding.y.field]);
-        let barH2 = y(data.filter(d => d[encoding.x.field].toString() === style['difference'][1])[0][encoding.y.field]);
+        let barH1 = y(data.filter(d => d[encoding.x.field].toString() === style['difference'][0].toString())[0][encoding.y.field]);
+        let barH2 = y(data.filter(d => d[encoding.x.field].toString() === style['difference'][1].toString())[0][encoding.y.field]);
         let barW1 = x(style['difference'][0]) + x.bandwidth() / 2
         let barW2 = x(style['difference'][1]) + x.bandwidth() / 2
         let h1 = barH1 + height / 20 < height ? barH1 + height / 20 : height - height / 50;

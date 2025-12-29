@@ -38,7 +38,8 @@
                 width: 100%;
                 background-color: rgba(225, 235, 243, 1);
                 border-radius: 6px;
-                font-weight: 600;
+                /* font-weight: 600; */
+                /* font-size: 30px; */
             }
 
             .fact-config-panel {
@@ -110,6 +111,7 @@
             background-color: rgba(225, 235, 243, 1);
             border-radius: 6px;
             font-weight: 600;
+            font-size: 16px;
         }
 
         .fact-config-panel {
@@ -130,6 +132,7 @@
             background-color: rgba(225, 235, 243, 1);
             border-radius: 6px;
             font-weight: 600;
+            font-size: 16px;
         }
         .data-source-table {
             width: 100%;
@@ -164,6 +167,10 @@
 .fact-collapse .ant-collapse-item-active {
     background-color: rgba(205, 236, 255, 0.08) !important;
     border: 1px solid rgba(99, 153, 188, 1) !important;
+}
+
+.ant-collapse-header {
+    padding: 10px 14px !important;
 }
 
 .ant-table-cell {

@@ -7,8 +7,64 @@
     transition: width 0.3s ease; /* 过渡宽度 */
   }
   
-  /* 当侧边栏展开时，主内容区域的样式 */
-  .sidebar.open + .main-content {
-    width: calc(60% - 40px); /* 主内容区域的宽度 */
+/* 当侧边栏展开时，主内容区域的样式 */
+.sidebar.open + .main-content {
+  width: calc(60% - 40px); /* 主内容区域的宽度 */
+}
+
+.result-container {
+  margin-top: 10px;
+  margin-left: 10px;
+
+  .result-support {
+    display: flex;
+    align-items: center;
+    padding: 0 8px;
+    height: 22px;
+    width: fit-content;
+    border-radius: 4px;
+    background: rgba(227, 240, 238, 1);
+    color: rgba(51, 128, 115, 1);
+    font-weight: 700;
+    font-size: 12px;
+
+    .count-support {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-left: 4px;
+      color: #ffffff;
+      height: 15px;
+      width: 30px;
+      background-color: rgba(143, 204, 194, 1);
+      border-radius: 3px;
+    }
   }
+
+  .result-oppose {
+    display: flex;
+    align-items: center;
+    padding: 0 8px;
+    margin-top: 3px;
+    height: 22px;
+    width: fit-content;
+    border-radius: 4px;
+    background: rgba(242, 228, 232, 1);
+    color: rgba(178, 107, 131, 1);
+    font-weight: 700;
+    font-size: 12px;
+
+    .count-oppose {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-left: 4px;
+      color: #ffffff;
+      height: 15px;
+      width: 30px;
+      background-color: rgba(229, 161, 183, 1);
+      border-radius: 3px;
+    }
+  }
+}
 

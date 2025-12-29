@@ -21,7 +21,10 @@ const BalloonLayout = (nodes, edges, currentNode, stance, setNode, addNum=3, adj
     const layoutNodes = (parent, parentPosition=null, addNum=3)=>{
         const id = parent.id
         const childNodes = findChildNodes(id, nodes, edges)
-        const childNodesSameSides = childNodes.filter((node)=>node.data.stance.label==stance && !node.hidden)
+        let childNodesSameSides = childNodes.filter((node)=>node.data.stance.label==stance && !node.hidden)
+        if (id !== rootNode.id) {
+            childNodesSameSides = childNodes
+        }
         const childNodeNum = parent.id == currentNode.id ? childNodesSameSides.length + addNum : childNodesSameSides.length
         let currentAngle, angleStart, angleEnd, angleStep, radius
         let curMaxIndex = childNodes.length>0 ? childNodes.reduce((max, node) => {
@@ -34,10 +37,11 @@ const BalloonLayout = (nodes, edges, currentNode, stance, setNode, addNum=3, adj
                 angleStart = stance == 'support' ? -Math.PI * 75/180 : -Math.PI * 105/180 
                 angleEnd = stance == 'support' ? Math.PI * 75/180  : - Math.PI * 255/180
             } else {
-                angleStart = stance == 'support' ? -Math.PI/3 : -Math.PI/3*2
-                angleEnd = stance == 'support' ? Math.PI/3 : - Math.PI/3*4
-            }
-            radius = 420
+                angleStart = stance == 'support' ? -(Math.PI/3 - (3-childNodeNum)*Math.PI/12) : -(Math.PI/3*2)
+                angleEnd = stance == 'support' ? (Math.PI/3 - (3-childNodeNum)*Math.PI/12) : - (Math.PI/3*4)
+            } 
+            console.log('angle root', angleStart/Math.PI, angleEnd/Math.PI, childNodeNum)
+            radius = 480
         } else if (parentPosition) {
             // 更新
             angleStart = parentPosition.angles.start
@@ -45,19 +49,46 @@ const BalloonLayout = (nodes, edges, currentNode, stance, setNode, addNum=3, adj
             radius = parentPosition.radius
         } else {
             // 当节点不为根节点时，需要拿出当前这个节点所允许的子节点的角度信息
+            // if (parent.id != rootNode.id) {
+            //     if (stance != parent.data.stance.label) {
+            //         angleStart = Math.PI - parent.angles.start
+            //         angleEnd = Math.PI - parent.angles.end 
+            //     } else {
+            //         angleStart = parent.angles.start
+            //         angleEnd = parent.angles.end
+            //     }
+            // }
             angleStart = parent.angles.start
             angleEnd = parent.angles.end
             radius = parent.radius
         }
         
-        if (childNodeNum > 1) {
+        if (childNodeNum > 2) {
             angleStep = (angleEnd - angleStart) / (childNodeNum-1);
             currentAngle = angleStart;
+        } else if (childNodeNum == 2) {
+            let delta = angleEnd - angleStart;
+            delta = (delta + Math.PI) % (2 * Math.PI) - Math.PI; 
+            if (Math.abs(delta) > Math.PI/2) {
+                let offset = Math.abs(delta) - Math.PI/4;
+                let adjustment = offset / 2;
+                if (delta > 0) {
+                    angleStart += adjustment;
+                    angleEnd -= adjustment;
+                } else {
+                    angleStart -= adjustment;
+                    angleEnd += adjustment;
+                }
+            }
+            angleStep = angleEnd - angleStart
+            currentAngle = angleStart
         } else {
             currentAngle = (angleStart + angleEnd) / 2;
             angleStep = 0
         }
 
+        // console.log('angle', angleStep, currentAngle)
+        
         // 当子节点多于3个时，需要将当前节点往外圈移动
         if (id != rootNode.id && childNodeNum > 3) {
             const curPos = newPositions.find((pos) => pos.id === parent.id) || nodes.find((node)=>node.id===parent.id)
@@ -81,7 +112,7 @@ const BalloonLayout = (nodes, edges, currentNode, stance, setNode, addNum=3, adj
         // 已有同边节点继续更新
         childNodesSameSides.forEach((child, index) => {
             let childContainer = document.getElementById(`querynode-${child.id}`);
-            let childW = childContainer.offsetWidth, childH = childContainer.offsetHeight
+            let childW = childContainer? childContainer.offsetWidth : 200, childH =childContainer? childContainer.offsetHeight : 214
 
             // 只更新与当前节点同一侧（立场一致）的节点
             let x = radius * Math.cos(currentAngle);
@@ -90,7 +121,6 @@ const BalloonLayout = (nodes, edges, currentNode, stance, setNode, addNum=3, adj
             // let absoluteY = parent.positionAbsolute.y + y
             let absoluteX = parent.positionAbsolute.x + x - childW/2*(child.scale-1)
             let absoluteY = parent.positionAbsolute.y + y - childH/2*(child.scale-1)
-            console.log('child', child, currentAngle, absoluteX, absoluteY)
             currentAngle += angleStep;
             let newPosition = { 
                 id: child.id, 
@@ -141,147 +171,40 @@ const BalloonLayout = (nodes, edges, currentNode, stance, setNode, addNum=3, adj
     })
 
     // setNode(newNodes)
-    // return addPositions
+    // return {nodes: newNodes, positions: addPositions}
     
     function splitArrayAtIndex(arr, index) {
         const firstPart = arr.slice(0, index);
         const secondPart = arr.slice(index);
         return [firstPart, secondPart];
-      }
+    }
     
     const newNodesList = newNodes.concat(addPositions)
     const resolvedNodes = resolveCollisions(newNodesList)
     const [newNodesAdjust, newAddPositions] = splitArrayAtIndex(resolvedNodes, newNodes.length);
     setNode(newNodesAdjust)
-
     return {nodes: newNodesAdjust, positions: newAddPositions}
 }
 
-// 方法一
-const resolveCollisions1 = (nodes, nodeRadius) => {
-    const positions = nodes.map(node => ({ x: node.position.x, y: node.position.y }));
 
-    for (let i = 0; i < nodes.length; i++) {
-        for (let j = i + 1; j < nodes.length; j++) {
-            const dx = positions[j].x - positions[i].x;
-            const dy = positions[j].y - positions[i].y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
-            const minDistance = 2 * nodeRadius; // 假设节点的直径
-
-            if (distance < minDistance) {
-                // 计算调整量
-                const overlap = minDistance - distance;
-                const adjustment = overlap / 2;
-                const angle = Math.atan2(dy, dx);
-
-                // 调整节点位置
-                positions[i].x -= adjustment * Math.cos(angle);
-                positions[i].y -= adjustment * Math.sin(angle);
-                positions[j].x += adjustment * Math.cos(angle);
-                positions[j].y += adjustment * Math.sin(angle);
-            }
-        }
+// 用SAT检测碰撞
+let rectOverlapRect = (x1, y1, width1, height1, x2, y2, width2, height2) => {
+    let rect1 = new SAT.Box(new SAT.Vector(x1, y1), width1, height1).toPolygon();
+    let rect2 = new SAT.Box(new SAT.Vector(x2, y2), width2, height2).toPolygon();
+    let response = new SAT.Response();
+    let collided = SAT.testPolygonPolygon(rect2, rect1, response)
+    if(collided){
+        return response.overlapV;
     }
+    return false;
+}
 
-    // 更新节点位置
-    nodes.forEach((node, i) => {
-        node.position.x = positions[i].x;
-        node.position.y = positions[i].y;
-    });
-};
-
-const minimalPenetrationDepth = (nodes) => {
-    const detectCollision = (nodeA, nodeB) => {
-        const ax = nodeA.position.x;
-        const ay = nodeA.position.y;
-        const bx = nodeB.position.x;
-        const by = nodeB.position.y;
-        const widthA = nodeA.width || 100;
-        const heightA = nodeA.height || 50;
-        const widthB = nodeB.width || 100;
-        const heightB = nodeB.height || 50;
-
-        return !(bx > ax + widthA ||
-                 bx + widthB < ax ||
-                 by > ay + heightA ||
-                 by + heightB < ay);
-    };
-
-    const resolveCollision = (nodeA, nodeB) => {
-        const dx = nodeB.position.x - nodeA.position.x;
-        const dy = nodeB.position.y - nodeA.position.y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        const minDist = Math.sqrt((nodeA.width ** 2 + nodeA.height ** 2) / 4) + Math.sqrt((nodeB.width ** 2 + nodeB.height ** 2) / 4);
-
-        if (dist < minDist) {
-            const overlap = minDist - dist;
-            const moveX = (overlap / dist) * dx / 2;
-            const moveY = (overlap / dist) * dy / 2;
-
-            nodeA.position.x -= moveX;
-            nodeA.position.y -= moveY;
-            nodeB.position.x += moveX;
-            nodeB.position.y += moveY;
-        }
-    };
-
-    for (let i = 0; i < nodes.length; i++) {
-        for (let j = i + 1; j < nodes.length; j++) {
-            if (detectCollision(nodes[i], nodes[j])) {
-                resolveCollision(nodes[i], nodes[j]);
-            }
-        }
-    }
-};
-
-// 方法2
-const calculateMPD1 = (nodeA, nodeB) => {
-    const dx = nodeB.positionAbsolute.x - nodeA.positionAbsolute.x;
-    const dy = nodeB.positionAbsolute.y - nodeA.positionAbsolute.y;
-    const aWidth = nodeA.width ? nodeA.width : 200
-    const aHeight = nodeA.showVis ? 315 : 110
-    const bWidth = nodeB.width ? nodeB.width : 200
-    const bHeight = nodeB.showVis? 315 : 110
-    // const minDistanceX = (aWidth + bWidth) / 2 + 10;
-    const minDistanceY = (aHeight + bHeight) / 2 + 10;
-
-    const minDistanceX = 210  // +20是希望相隔一定距离
-    // const minDistanceY = 320
-
-    let penetrationDepthX = minDistanceX - Math.abs(dx);
-    let penetrationDepthY = minDistanceY - Math.abs(dy);
-
-    let paddingSpace = 5
-    let vec = rectOverlapRect(nodeA.positionAbsolute.x-paddingSpace, nodeA.positionAbsolute.y-paddingSpace, aWidth+2*paddingSpace, aHeight+2*paddingSpace, nodeB.positionAbsolute.x-paddingSpace, nodeB.positionAbsolute.y-paddingSpace, bWidth+2*paddingSpace, bHeight+2*paddingSpace);
-            
-
-    console.log('mpd', vec, nodeA, nodeB, penetrationDepthX, penetrationDepthY, minDistanceX, minDistanceY)
-
-    if (vec) {
-        return {x: vec.x, y: vec.y}
-    }
-
-    // if (penetrationDepthX > 0 && penetrationDepthY > 0) {
-    //     if (penetrationDepthX < penetrationDepthY) {
-    //         return { x: penetrationDepthX * Math.sign(dx), y: 0 };
-    //     } else {
-    //         return { x: 0, y: penetrationDepthY * Math.sign(dy) };
-    //     }
-
-    //     // return {x: penetrationDepthX * Math.sign(dx), y: penetrationDepthY * Math.sign(dy)}
-    // }
-
-    return { x: 0, y: 0 };
-};
-
-
-// 用SAT
 const calculateMPD = (nodeA, nodeB) => {
     let aWidth = nodeA.width ? nodeA.width : 200
     let bWidth = nodeB.width ? nodeB.width : 200
     let scaleA = nodeA.scale
     let scaleB = nodeB.scale
-    let aHeight = 110, bHeight = 110
+    let aHeight = 214, bHeight = 214
 
     const containerA = document.getElementById(`querynode-${nodeA.id}`);
     if (containerA) {
@@ -308,24 +231,7 @@ const calculateMPD = (nodeA, nodeB) => {
     return { x: 0, y: 0 };
 }
 
-const angleConstraint = (nodeA, nodeB, originalAngle) => {
-    const dx = nodeB.position.x - nodeA.position.x;
-    const dy = nodeB.position.y - nodeA.position.y;
-    const currentAngle = Math.atan2(dy, dx);
-
-    const angleDifference = currentAngle - originalAngle;
-    const angleThreshold = Math.PI / 12; // 15 degrees
-
-    if (Math.abs(angleDifference) > angleThreshold) {
-        const correctionAngle = angleDifference > 0 ? angleThreshold : -angleThreshold;
-        const newAngle = originalAngle + correctionAngle;
-
-        const distance = Math.sqrt(dx * dx + dy * dy);
-        nodeB.position.x = nodeA.position.x + distance * Math.cos(newAngle);
-        nodeB.position.y = nodeA.position.y + distance * Math.sin(newAngle);
-    }
-};
-
+// 去除碰撞
 const resolveCollisions = (nodes) => {
     let resolvedNodes = [...nodes];
     let collisionDetected
@@ -339,9 +245,7 @@ const resolveCollisions = (nodes) => {
             const nodeA = resolvedNodes[i];
             const nodeB = resolvedNodes[j];
             const penetration = calculateMPD(nodeA, nodeB);
-            
             if (penetration.x !== 0 || penetration.y !== 0) {
-                console.log('penetration', penetration)
                 const newAX = nodeA.position.x + penetration.x / 2
                 const newAY = nodeA.position.y + penetration.y / 2
                 const newBX = nodeB.position.x - penetration.x / 2
@@ -379,25 +283,15 @@ const resolveCollisions = (nodes) => {
                 resolvedNodes[i] = newNodeA
                 collisionDetected = true
 
-                console.log('penetration', nodeA, nodeB, newNodeA, newNodeB)  
+                // console.log('penetration', nodeA, nodeB, newNodeA, newNodeB)  
             }
         }
     }
-    } while (collisionDetected && iterations < 20)
+    } while (collisionDetected && iterations < 100)
 
     return resolvedNodes;
 };
 
-let rectOverlapRect = (x1, y1, width1, height1, x2, y2, width2, height2) => {
-    let rect1 = new SAT.Box(new SAT.Vector(x1, y1), width1, height1).toPolygon();
-    let rect2 = new SAT.Box(new SAT.Vector(x2, y2), width2, height2).toPolygon();
-    let response = new SAT.Response();
-    let collided = SAT.testPolygonPolygon(rect2, rect1, response)
-    if(collided){
-        return response.overlapV;
-    }
-    return false;
-}
   
 const stressMajorization = (nodes, edges, maxIterations = 100, epsilon=0.01) => {
     const n = nodes.length
@@ -423,7 +317,6 @@ const stressMajorization = (nodes, edges, maxIterations = 100, epsilon=0.01) => 
     };
 
     let prevStress = computeStress();
-    console.log('prevestress', prevStress)
 
     for (let k = 0; k < maxIterations; k++) {
         const forces = positions.map(() => [0, 0]);
@@ -453,7 +346,7 @@ const stressMajorization = (nodes, edges, maxIterations = 100, epsilon=0.01) => 
 
         const currentStress = computeStress();
         const relativeChange = (prevStress - currentStress) / prevStress;
-        console.log('currstree', currentStress)
+
         if (relativeChange < epsilon) {
             console.log(`Converged after ${k + 1} iterations`);
             break;

@@ -20,7 +20,7 @@ const draw = (props) => {
     const height_label = _.min([0.8 *  Math.round(getWidth(d3.map(data, function(d){return d[encoding.x.field]}).keys().sort(function(a, b) {
         return b.length - a.length;
       })[0])), 0.4 * props.height])
-    const margin = { top: 10, right: 10, bottom: height_label, left: 60 };
+    const margin = { top: 10, right: 10, bottom: height_label, left: 50 };
     const width = props.width - margin.left - margin.right - offset;
     const height = props.height - margin.top - margin.bottom - offset;
     let svg = d3.select(a)
@@ -65,7 +65,6 @@ const draw = (props) => {
     // ISOType
     let isotypes = [];
 
-    console.log('isotype', data)
     // Bars
     svg.selectAll(".bar")
         .data(data)
@@ -132,11 +131,14 @@ const draw = (props) => {
     
     // Axis
     let x_domain_length = x.domain().length;
-    let numTicks = Math.min(x_domain_length, 8);
 
-    let tickValues = x.domain().filter(function(d, i) { 
-        return i % (numTicks+1) === 0; 
-    });
+    let tickValues;
+    if (x_domain_length > 8 && encoding.x.type == 'temporal') {
+        let step = Math.ceil(x_domain_length / 8);
+        tickValues = x.domain().filter((d, i) => i % step === 0);
+    } else {
+        tickValues = x.domain();
+    }
 
     svg.append("g")
         .attr("class", "x_axis")
@@ -148,14 +150,28 @@ const draw = (props) => {
     svg.append("g")
         .attr("class", "y_axis")
         .call(d3.axisLeft(y).ticks(5).tickFormat(function (d) {
-            if ((d / 1000000000) >= 1) {
-                d = d / 1000000000 + "B"
-            } else if ((d / 1000000) >= 1) {
-                d = d / 1000000 + "M";
-            } else if ((d / 1000) >= 1) {
-                d = d / 1000 + "K";
+            let absD = Math.abs(d);
+            let suffix = '';
+        
+            if ((absD / 1000000000000) >= 1) { // 万亿
+                absD = (absD / 1000000000000);
+                suffix = "T";
+            } else if ((absD / 1000000000) >= 1) { // 十亿
+                absD = (absD / 1000000000);
+                suffix = "B";
+            } else if ((absD / 1000000) >= 1) { // 百万
+                absD = (absD / 1000000);
+                suffix = "M";
+            } else if ((absD / 1000) >= 1) { // 千
+                absD = (absD / 1000);
+                suffix = "K";
             }
-            return d;
+        
+            // Check if there are decimal places and they exceed two decimal places
+            absD = absD % 1 === 0 ? absD : absD.toFixed(2);
+        
+            let formatted = absD + suffix;
+            return d < 0 ? "-" + formatted : formatted;
         }));
 
     // Style

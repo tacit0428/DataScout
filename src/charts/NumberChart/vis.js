@@ -57,10 +57,10 @@ const draw = (props) => {
     }
   
     // textFontSize
-    let textFontSize = 30 * screenWidth / 200
-    if(encoding.y.field.length > 13) {
-        textFontSize = 20 * screenWidth / 200
-    }
+    // let textFontSize = 30 * screenWidth / 200
+    // if(encoding.y.field.length > 13) {
+    //     textFontSize = 18 * screenWidth / 200
+    // }
 
     // svg.append("text")
     //     .text(encoding.y.field)
@@ -72,7 +72,7 @@ const draw = (props) => {
     //     .attr("fill", Color.BAR)
     //     .style("font-weight", "bold");
     
-    let maxCharsPerLine = 20;
+    let maxCharsPerLine = 25;
     let lines = [];
     let words = encoding.y.field.split(" ");
     let currentLine = words[0];
@@ -87,6 +87,13 @@ const draw = (props) => {
         }
     }
     lines.push(currentLine);
+
+    // Find the length of the longest line
+    let maxLineLength = Math.max(...lines.map(line => line.length));
+
+    // Calculate font size based on the longest line
+    let textFontSize = Math.min((screenWidth * 300) / (200 * maxLineLength), 20);
+
     
     lines.forEach((line, index) => {
         svg.append("text")

@@ -6,7 +6,6 @@ export default class AreaChart extends Component {
     componentDidMount() {
         try {
             draw(this.props);
-            console.log('mount draw')
         } catch (error) {
         }
     }
@@ -14,7 +13,6 @@ export default class AreaChart extends Component {
     componentDidUpdate(preProps) {
         try {
             draw(this.props);
-            console.log('update draw')
         } catch (error) {
         }
     }

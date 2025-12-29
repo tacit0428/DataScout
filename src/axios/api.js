@@ -48,11 +48,12 @@ export async function decomposeQuery(query, layer, stance) {
     })
 }
 
-export async function retrieveFacts(statement, query, stance) {
-    console.log('api retrieve', statement, query, stance)
+// 分解query同时检索fact(添加节点时触发)
+export async function decomposeAndRetrieve(statement, query, stance) {
+    console.log('api decompose & retrieve', statement, query, stance)
     return axios({
         method: "post",
-        url: `${config.url.datafact}`,
+        url: `${config.url.retrieve}`,
         config: {
             "headers": {
                 'Content-Type': 'application/json; charset=utf-8'
@@ -66,6 +67,45 @@ export async function retrieveFacts(statement, query, stance) {
     })
 }
 
+// 单个query检索(QueryEditor中搜索触发)
+export async function retrieveFacts(statement, query, stance) {
+    console.log('api retrievebyQuery', statement, query, stance)
+    return axios({
+        method: "post",
+        url: `${config.url.retrieveByQuery}`,  // 之前是datafact
+        config: {
+            "headers": {
+                'Content-Type': 'application/json; charset=utf-8'
+            },
+        },
+        data: {
+            "statement": statement,
+            "query": query,
+            "stance": stance
+        }
+    })
+}
+
+// 根据关键词生成新query并检索
+export async function generateQueryAndRetrieve(statement, stance, keywords) {
+    console.log('api generatequeryandretrieve', statement, stance, keywords)
+    return axios({
+        method: "post",
+        url: `${config.url.updateQuery}`,
+        config: {
+            "headers": {
+                'Content-Type': 'application/json; charset=utf-8'
+            },
+        },
+        data: {
+            "statement": statement,
+            "stance": stance,
+            "key_word": keywords
+        }
+    })
+}
+
+// 根据关键词生成query
 export async function generateQuery(statement, stance, keywords) {
     console.log('api generatequery', statement, stance, keywords)
     return axios({
@@ -80,6 +120,60 @@ export async function generateQuery(statement, stance, keywords) {
             "query": statement,
             "stance": stance,
             "key_word": keywords
+        }
+    })
+}
+
+export async function storeFacts(statement, nodes, edges, id) {
+    console.log('api storeFacts', statement, nodes, edges)
+    return axios({
+        method: "post",
+        url: `${config.url.storeFacts}`,
+        config: {
+            "headers": {
+                'Content-Type': 'application/json; charset=utf-8'
+            },
+        },
+        data: {
+            "statement": statement,
+            "nodes": nodes,
+            "edges": edges,
+            "id": id
+        }
+    })
+}
+
+export async function loadFacts(filename) {
+    console.log('api loadFacts', filename)
+    return axios({
+        method: "post",
+        url: `${config.url.loadFacts}`,
+        config: {
+            "headers": {
+                'Content-Type': 'application/json; charset=utf-8'
+            },
+        },
+        data: {
+            "filename": filename
+        }
+    })
+}
+
+export async function decomposeAndRetrieveTest(statement, query, stance, retrieve=false) {
+    console.log('api decompose & retrieve test', statement, query, stance, retrieve)
+    return axios({
+        method: "post",
+        url: `${config.url.retrieveTest}`,
+        config: {
+            "headers": {
+                'Content-Type': 'application/json; charset=utf-8'
+            },
+        },
+        data: {
+            "statement": statement,
+            "query": query,
+            "stance": stance,
+            "retrieve": retrieve
         }
     })
 }

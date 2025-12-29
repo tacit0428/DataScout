@@ -62,7 +62,7 @@ const draw = (props) => {
     // let tipOffestWidth = ('focus' in style && style.focus) ? 30 : 0
     // const margin = {top: 60, right: 60, bottom: 40, left: 40};
     // const margin = { top: 10, right: 0 + tipOffestWidthRight, bottom: height_label, left: 60 + tipOffestWidthLeft };
-    const margin = { top: 10, right: 0, bottom: height_label, left: 60 };
+    const margin = { top: 10, right: 0+tipOffestWidthRight, bottom: height_label, left: 50+tipOffestWidthLeft };
     const width = props.width - margin.left - margin.right - offset;
     const height = props.height - margin.top - margin.bottom - offset;
     const chartWidth = width,
@@ -88,10 +88,10 @@ const draw = (props) => {
 
     let hasSeries = ('color' in encoding) && ('field' in encoding.color);
 
-    data.forEach((d) => {
-        d[encoding.y.field] = +d[encoding.y.field];
-        return d;
-    })
+    // data.forEach((d) => {
+    //     d[encoding.y.field] = +d[encoding.y.field];
+    //     return d;
+    // })
 
     // Get series and stacked data
     let dataSeries = {};
@@ -140,15 +140,15 @@ const draw = (props) => {
             .range([0, chartWidth])
             .nice();
         // Y channel
+        let yMin = d3.min(data.map(d => d[encoding.y.field]));
+        let yMax = d3.max(data.map(d => d[encoding.y.field]));
+        let buffer = (yMax - yMin) * 0.2; 
         yScale = d3.scaleLinear()
-            .domain([d3.min(data.map(d => d[encoding.y.field])), d3.max(data.map(d => d[encoding.y.field])) + Math.abs(d3.min(data.map(d => d[encoding.y.field])))])
+            .domain([yMin - buffer, yMax + buffer])
             .range([chartHeight, tipOffestHeight])
             .nice();
 
     }
-    // console.log('dataSeriesCategories', dataSeriesCategories);
-    // console.log('dataSeries', dataSeries);
-    // console.log('series', series); // color 
 
     let chart = svg.append("g"),
         axis = chart.append("g")
@@ -156,8 +156,8 @@ const draw = (props) => {
         content = chart.append("g")
             .attr("class", "content")
             .attr("chartWidth", chartWidth)
-            .attr("chartHeight", chartHeight)
-            .attr("clip-path", "url(#clip-rect)"),
+            .attr("chartHeight", chartHeight),
+            // .attr("clip-path", "url(#clip-rect)"),
         legend = svg.append("g")
             .attr("transform", `translate(0, ${chartHeight + 60})`);
 
@@ -179,14 +179,27 @@ const draw = (props) => {
 
     let axisY = d3.axisLeft(yScale).ticks(5).tickFormat(function (d) {
         let absD = Math.abs(d);
-        if ((absD / 1000000000) >= 1) {
-            absD = absD / 1000000000 + "B"
-        } else if ((d / 1000000) >= 1) {
-            absD = absD / 1000000 + "M";
-        } else if ((d / 1000) >= 1) {
-            absD = absD / 1000 + "K";
+        let suffix = '';
+
+        if ((absD / 1000000000000) >= 1) { // 万亿
+            absD = (absD / 1000000000000);
+            suffix = "T";
+        } else if ((absD / 1000000000) >= 1) { // 十亿
+            absD = (absD / 1000000000);
+            suffix = "B";
+        } else if ((absD / 1000000) >= 1) { // 百万
+            absD = (absD / 1000000);
+            suffix = "M";
+        } else if ((absD / 1000) >= 1) { // 千
+            absD = (absD / 1000);
+            suffix = "K";
         }
-        return d < 0 ? "-" + absD : absD;
+
+        // Check if there are decimal places and they exceed two decimal places
+        absD = absD % 1 === 0 ? absD : absD.toFixed(2);
+
+        let formatted = absD + suffix;
+        return d < 0 ? "-" + formatted : formatted;
     });
 
     let axis_x = axis.append("g")
@@ -216,11 +229,14 @@ const draw = (props) => {
             maxLabelWidth = bbox.width;
         }
     });
-    svg.attr("transform", "translate(" + Math.min(50, maxLabelWidth*2) + "," + margin.top + ")");
+    svg.attr("transform", "translate(" + Math.min(40, Math.max(maxLabelWidth*2, 35)) + "," + margin.top + ")");
 
     
     // line Function
     var lineGen = d3.line()
+        .defined(function(d) {
+            return d.y !== null;  // 仅当 y 值不为 null 时才绘制数据点
+        })
         .x(function (d) {
             // return xScale(d.x);
             return xScale(parseTime(d.x));
@@ -229,7 +245,7 @@ const draw = (props) => {
             return yScale(d.y);
         })
         .curve(d3.curveMonotoneX)
-
+    
     // Origin is set
     if (series.length > 0) {
         let preparedData = {}
@@ -304,12 +320,14 @@ const draw = (props) => {
         });
         let averageData = [];
         Object.keys(sData).forEach(s => {
+            if (sData[s]) {
             averageData.push({
                 x: s,
                 y: sData[s],
                 y0: 0,
                 color: 'overall'
             })
+        }
         })
         averageData = averageData.sort(sortByDateAscending);
 
@@ -333,13 +351,26 @@ const draw = (props) => {
             .attr('stroke-width', 3)
             .attr('fill', 'none')
             .attr('class', 'data-item series_overall');
+        
+        const dotNum = averageData.length
+
+        let maxRadius = 4;
+        let minRadius = 1;
+        let radiusScale = d3.scaleLinear()
+            .domain([1, Math.max(100, dotNum)])  
+            .range([maxRadius, minRadius])
+            .clamp(true);  
+
+        // 根据数据点的数量计算 radius
+        let radius = radiusScale(dotNum);
+
         group.selectAll('.dot')
             .data(averageData)
             .enter()
             .append('circle')
             .attr("cx", function (d) { return xScale(parseTime(d.x)) }) // parseTime
             .attr("cy", function (d) { return yScale(d.y) })
-            .attr("r", 4)
+            .attr("r", radius)
             .style("stroke", Color.LINE)    // set the line colour
             .style('stroke-width', 3)
             .style("fill", Color.LINE)
